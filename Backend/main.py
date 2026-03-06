@@ -1,5 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 from dotenv import load_dotenv
 import shutil
 import os
@@ -56,7 +58,10 @@ async def analyze_image(file: UploadFile = File(...)):
 
         return {
             "extracted_text": extracted_text,
-            "analysis": analysis
+            "credibility_score": analysis["credibility_score"],
+            "risk_level": analysis["risk_level"],
+            "explanation": analysis["explanation"],
+            "warning_signs": analysis["warning_signs"]
         }
 
     except HTTPException:
@@ -67,3 +72,29 @@ async def analyze_image(file: UploadFile = File(...)):
         # Clean up temp file
         if os.path.exists(file_location):
             os.remove(file_location)
+
+
+class TextRequest(BaseModel):
+    text: str
+
+
+@app.post("/analyze-text")
+def analyze_text(request: TextRequest):
+    if not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty.")
+
+    analysis = analyze_claim(request.text)
+
+    return {
+        "input_text": request.text,
+        "credibility_score": analysis["credibility_score"],
+        "risk_level": analysis["risk_level"],
+        "explanation": analysis["explanation"],
+        "warning_signs": analysis["warning_signs"]
+    }
+
+
+# Serve frontend static files
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Frontend")
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

@@ -42,12 +42,13 @@ The system workflow:
 
 # Key Features 🚀
 
-* Screenshot misinformation detection
-* Text claim analysis
-* AI-powered credibility scoring
+* Screenshot misinformation detection (OCR → AI)
+* Direct text claim analysis
+* AI-powered credibility scoring (0–100)
 * Risk level classification (Low / Medium / High)
 * AI-generated explanations for suspicious claims
-* Educational insights into misinformation patterns
+* Warning signs detection (emotional language, missing sources, etc.)
+* Clean web-based frontend interface
 
 ---
 
@@ -114,6 +115,9 @@ TruthLens
 │   ├── ai_analysis.py
 │   ├── .env
 │
+├── Frontend
+│   ├── index.html
+│
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
@@ -174,21 +178,44 @@ uvicorn main:app --reload
 
 Open:
 
-```
-http://127.0.0.1:8000/docs
+* **Frontend UI:** [http://127.0.0.1:8000/app](http://127.0.0.1:8000/app)
+* **Swagger API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+# API Endpoints 📡
+
+| Method | Endpoint | Description |
+|--------|-----------------|--------------------------------------|
+| GET | / | Health check |
+| POST | /analyze-image | Upload screenshot for analysis |
+| POST | /analyze-text | Submit text claim for analysis |
+
+### POST /analyze-image
+
+Upload an image file (PNG, JPG, WEBP).
+
+### POST /analyze-text
+
+```json
+{ "text": "Drinking hot water cures COVID" }
 ```
 
 ---
 
 # Example Output 📊
 
-```
-Credibility Score: 35%
-
-Risk Level: High
-
-Explanation:
-This claim lacks evidence from trusted sources and contains exaggerated language commonly found in misinformation.
+```json
+{
+  "credibility_score": 15,
+  "risk_level": "High",
+  "explanation": "This claim lacks evidence from trusted sources and contains exaggerated language commonly found in misinformation.",
+  "warning_signs": [
+    "No credible sources cited",
+    "Viral misinformation pattern",
+    "Lacks scientific evidence"
+  ]
+}
 ```
 
 ---

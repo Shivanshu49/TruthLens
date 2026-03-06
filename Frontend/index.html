@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthLens AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.4rem;
+            color: #fff;
+        }
+
+        header h1 span { color: #00d4ff; }
+
+        header p {
+            color: #aaa;
+            margin-top: 8px;
+            font-size: 1rem;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #ccc;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: transparent;
+            color: #aaa;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(0,212,255,0.15);
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .upload-area {
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-area:hover { border-color: #00d4ff; }
+
+        .upload-area p { color: #888; margin-top: 8px; }
+
+        .upload-area .icon { font-size: 2.5rem; }
+
+        #file-name {
+            margin-top: 10px;
+            color: #00d4ff;
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 14px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        textarea:focus { outline: none; border-color: #00d4ff; }
+
+        .analyze-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #00d4ff, #0090ff);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .analyze-btn:hover { opacity: 0.9; }
+        .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .result-card { display: none; }
+        .result-card.visible { display: block; }
+
+        .score-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .score-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .score-circle.high { background: rgba(255,60,60,0.2); color: #ff4444; border: 3px solid #ff4444; }
+        .score-circle.medium { background: rgba(255,165,0,0.2); color: #ffa500; border: 3px solid #ffa500; }
+        .score-circle.low { background: rgba(0,200,80,0.2); color: #00c850; border: 3px solid #00c850; }
+
+        .score-info h3 { font-size: 1.1rem; margin-bottom: 4px; }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .risk-badge.High { background: rgba(255,60,60,0.2); color: #ff4444; }
+        .risk-badge.Medium { background: rgba(255,165,0,0.2); color: #ffa500; }
+        .risk-badge.Low { background: rgba(0,200,80,0.2); color: #00c850; }
+
+        .explanation {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .warning-signs h4 {
+            margin-bottom: 10px;
+            color: #ffa500;
+        }
+
+        .warning-signs ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .warning-signs li {
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #bbb;
+        }
+
+        .warning-signs li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+        }
+
+        .extracted-text {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .extracted-text strong { color: #aaa; }
+
+        .spinner {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: #00d4ff;
+        }
+
+        .spinner.visible { display: block; }
+
+        .spinner .dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            background: #00d4ff;
+            border-radius: 50%;
+            margin: 0 4px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .spinner .dot:nth-child(1) { animation-delay: -0.32s; }
+        .spinner .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .hidden-input { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Truth<span>Lens</span> AI</h1>
+            <p>AI-Powered Misinformation Detection</p>
+        </header>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('image')">📷 Upload Screenshot</button>
+                <button class="tab-btn" onclick="switchTab('text')">📝 Paste Text</button>
+            </div>
+
+            <div id="tab-image" class="tab-content active">
+                <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                    <div class="icon">📤</div>
+                    <p>Click to upload a screenshot</p>
+                    <p style="font-size:0.8rem; color:#666;">PNG, JPG, WEBP supported</p>
+                </div>
+                <input type="file" id="file-input" class="hidden-input" accept="image/png,image/jpeg,image/webp" onchange="onFileSelected(this)">
+                <div id="file-name"></div>
+                <button class="analyze-btn" id="btn-image" onclick="analyzeImage()" disabled>Analyze Screenshot</button>
+            </div>
+
+            <div id="tab-text" class="tab-content">
+                <textarea id="text-input" placeholder="Paste the news claim or message here..."></textarea>
+                <button class="analyze-btn" id="btn-text" onclick="analyzeText()">Analyze Text</button>
+            </div>
+        </div>
+
+        <div class="spinner" id="spinner">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <p style="margin-top:12px;">Analyzing with AI...</p>
+        </div>
+
+        <div class="card result-card" id="result">
+            <h2>Analysis Result</h2>
+
+            <div class="score-section">
+                <div class="score-circle" id="score-circle">
+                    <span id="score-value">0</span>%
+                </div>
+                <div class="score-info">
+                    <h3>Credibility Score</h3>
+                    <span class="risk-badge" id="risk-badge">—</span>
+                </div>
+            </div>
+
+            <div class="explanation" id="explanation"></div>
+
+            <div class="warning-signs" id="warning-signs">
+                <h4>⚠ Warning Signs Detected</h4>
+                <ul id="signs-list"></ul>
+            </div>
+
+            <div class="extracted-text" id="extracted-text"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            if (tab === 'image') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab-image').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab-text').classList.add('active');
+            }
+        }
+
+        function onFileSelected(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('file-name').textContent = '📎 ' + file.name;
+                document.getElementById('btn-image').disabled = false;
+            }
+        }
+
+        function showSpinner() {
+            document.getElementById('spinner').classList.add('visible');
+            document.getElementById('result').classList.remove('visible');
+        }
+
+        function hideSpinner() {
+            document.getElementById('spinner').classList.remove('visible');
+        }
+
+        function showResult(data, extractedText) {
+            hideSpinner();
+
+            const score = data.credibility_score;
+            const risk = data.risk_level;
+
+            // Score circle
+            const circle = document.getElementById('score-circle');
+            circle.className = 'score-circle';
+            if (score <= 40) circle.classList.add('high');
+            else if (score <= 70) circle.classList.add('medium');
+            else circle.classList.add('low');
+            document.getElementById('score-value').textContent = score;
+
+            // Risk badge
+            const badge = document.getElementById('risk-badge');
+            badge.textContent = risk + ' Risk';
+            badge.className = 'risk-badge ' + risk;
+
+            // Explanation
+            document.getElementById('explanation').textContent = data.explanation;
+
+            // Warning signs
+            const signsList = document.getElementById('signs-list');
+            signsList.innerHTML = '';
+            const signsContainer = document.getElementById('warning-signs');
+            if (data.warning_signs && data.warning_signs.length > 0) {
+                signsContainer.style.display = 'block';
+                data.warning_signs.forEach(sign => {
+                    const li = document.createElement('li');
+                    li.textContent = sign;
+                    signsList.appendChild(li);
+                });
+            } else {
+                signsContainer.style.display = 'none';
+            }
+
+            // Extracted text
+            const etDiv = document.getElementById('extracted-text');
+            if (extractedText) {
+                etDiv.style.display = 'block';
+                etDiv.innerHTML = '<strong>Extracted Text:</strong> ' + escapeHtml(extractedText);
+            } else {
+                etDiv.style.display = 'none';
+            }
+
+            document.getElementById('result').classList.add('visible');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        async function analyzeImage() {
+            const fileInput = document.getElementById('file-input');
+            if (!fileInput.files[0]) return;
+
+            showSpinner();
+            document.getElementById('btn-image').disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch(API_BASE + '/analyze-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Server error');
+                }
+
+                const data = await res.json();
+                showResult(data, data.extracted_text);
+            } catch (e) {
+                hideSpinner();
+                alert('Error: ' + e.message);
+            } finally {
+                document.getElementById('btn-image').disabled = false;
+            }
+        }
+
+        async function analyzeText() {
+            const text = document.getElementById('text-input').value.trim();
+            if (!text) { alert('Please enter some text.'); return; }
+
+            showSpinner();
+            document.getElementById('btn-text').disabled = true;
+
+            try {
+                const res = await fetch(API_BASE + '/analyze-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Server error');
+                }
+
+                const data = await res.json();
+                showResult(data, null);
+            } catch (e) {
+                hideSpinner();
+                alert('Error: ' + e.message);
+            } finally {
+                document.getElementById('btn-text').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
