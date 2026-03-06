@@ -239,4 +239,3 @@ This project was developed as part of a **hackathon focused on combating misinfo
 # Contributors 👨‍💻
 
 * Shivanshu Dixit
-* Team Members (add here)
