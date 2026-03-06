@@ -94,7 +94,7 @@ def analyze_text(request: TextRequest):
     }
 
 
-# Serve frontend static files
-FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Frontend")
+# Serve frontend static files (React build output)
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "dist")
 if os.path.isdir(FRONTEND_DIR):
     app.mount("/app", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

@@ -115,8 +115,16 @@ TruthLens
 │   ├── ai_analysis.py
 │   ├── .env
 │
-├── Frontend
-│   ├── index.html
+├── frontend
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── components
+│   │   │   ├── UploadImage.jsx
+│   │   │   ├── TextInput.jsx
+│   │   │   ├── ResultCard.jsx
+│   │   │   ├── Spinner.jsx
+│   ├── package.json
+│   ├── vite.config.js
 │
 ├── requirements.txt
 ├── README.md
@@ -169,7 +177,17 @@ GEMINI_API_KEY=your_api_key_here
 
 ---
 
-## 5 Run Backend Server
+## 5 Build Frontend
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+---
+
+## 6 Run Backend Server
 
 ```bash
 cd Backend
@@ -179,6 +197,7 @@ uvicorn main:app --reload
 Open:
 
 * **Frontend UI:** [http://127.0.0.1:8000/app](http://127.0.0.1:8000/app)
+* **Frontend Dev Server:** [http://localhost:5173](http://localhost:5173) (run `npm run dev` in frontend/)
 * **Swagger API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
