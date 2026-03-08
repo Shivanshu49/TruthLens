@@ -42,7 +42,8 @@ async def analyze_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Invalid file type: {file.content_type}. Upload PNG, JPG, or WEBP.")
 
     # Save with unique name to avoid conflicts
-    ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = file.filename or "upload.png"
+    ext = filename.split(".")[-1] if "." in filename else "png"
     file_location = os.path.join(TEMP_DIR, f"{uuid.uuid4().hex}.{ext}")
 
     try:
