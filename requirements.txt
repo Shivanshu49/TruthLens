@@ -2,5 +2,7 @@ fastapi
 uvicorn
 python-dotenv
 easyocr
-google-genai
+groq
 python-multipart
+pillow
+pydantic

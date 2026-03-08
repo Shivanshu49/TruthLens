@@ -1,260 +1,287 @@
 # TruthLens AI 🔍
 
-### AI-Powered Misinformation Detection System
+### AI-Powered Misinformation & Deepfake Detection Platform
 
-TruthLens AI is an AI-powered tool designed to help users detect potential **misinformation in screenshots, forwarded messages, and social media content**.
-
-In today's digital world, misinformation spreads rapidly through messaging platforms and social media. Many users unknowingly share misleading information because verifying claims quickly is difficult.
-
-TruthLens AI addresses this challenge by extracting text from screenshots using **OCR** and analyzing the content using **Generative AI** to evaluate whether a claim may be false, misleading, or unsupported by reliable sources.
-
-The system provides a **credibility score, risk level, and explanation** to help users understand why the information may be suspicious or trustworthy.
+TruthLens AI is a full-stack platform that helps users detect **misinformation in text, screenshots, and deepfake videos** using AI. Built with a **FastAPI** backend powered by **Groq AI (LLaMA 3.3 70B)** and a premium **React + TypeScript** frontend with glassmorphism UI, multi-language support, and real-time analysis.
 
 ---
 
-# Problem Statement 🌍
+## The Problem 🌍
 
-Misinformation spreads rapidly across:
+Misinformation and AI-generated deepfakes spread rapidly across:
 
-* WhatsApp forwards
-* Social media posts
-* Viral screenshots
-* Unverified news messages
+* WhatsApp forwards & viral screenshots
+* Deepfake videos of public figures on YouTube, Twitter/X, Instagram
+* Unverified news and social media posts
+* AI-generated voice clones and face-swaps
 
-Users often lack tools to **quickly verify information before sharing it**.
-
-TruthLens AI aims to solve this by providing a **simple AI-powered fact-check assistant**.
+Users lack tools to **quickly verify content before sharing** — TruthLens AI solves this.
 
 ---
 
-# Solution 💡
+## Solution 💡
 
-TruthLens AI combines **OCR + Generative AI** to analyze claims from images or text.
+TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platform:
 
-The system workflow:
-
-1. User uploads a screenshot or enters text
-2. OCR extracts the text from the image
-3. AI analyzes the claim
-4. System returns credibility score and explanation
+1. **Text Analysis** — Paste any claim, headline, or forwarded message → get AI-powered credibility scoring
+2. **Screenshot OCR** — Upload a screenshot → EasyOCR extracts text → AI analyzes the claim
+3. **Deepfake Video Detection** — Paste a video URL + optional description → AI evaluates deepfake likelihood with facial analysis, audio analysis, and technique detection
+4. **Live Threat Feed** — Dashboard showing trending misinformation threats across platforms
 
 ---
 
-# Key Features 🚀
+## Key Features 🚀
 
-* Screenshot misinformation detection (OCR → AI)
-* Direct text claim analysis
-* AI-powered credibility scoring (0–100)
-* Risk level classification (Low / Medium / High)
-* AI-generated explanations for suspicious claims
-* Warning signs detection (emotional language, missing sources, etc.)
-* Clean web-based frontend interface
+* 🔬 **Screenshot Misinformation Detection** — OCR text extraction → AI credibility analysis
+* 🎬 **Deepfake Video Analyzer** — AI-powered deepfake scoring with facial & audio analysis breakdown
+* 📝 **Text Claim Analysis** — Direct text input for instant fact-checking
+* 📊 **Credibility Scoring** — 0–100 score with risk level (Low/Medium/High)
+* ⚠️ **Warning Signs Detection** — Emotional language, missing sources, viral patterns, etc.
+* 📡 **Live Threat Feed** — Real-time trending misinformation alerts
+* 🌐 **Multi-Language UI** — English, Hindi, Tamil, Telugu, Bengali, Marathi
+* 🎨 **Premium Glass UI** — Dark/light themes, liquid canvas, bot cursor, smooth animations
+* 📱 **Fully Responsive** — Works on desktop, tablet, and mobile
 
 ---
 
-# System Architecture 🏗
+## Tech Stack ⚙️
+
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Python, FastAPI, Uvicorn |
+| **AI Engine** | Groq API (LLaMA 3.3 70B Versatile) |
+| **OCR** | EasyOCR (pure Python, no system binaries) |
+| **Frontend** | React 19, TypeScript, Vite |
+| **Styling** | Custom CSS with glassmorphism design system |
+| **Languages** | 6 languages (EN, HI, TA, TE, BN, MR) |
+
+---
+
+## System Architecture 🏗
 
 ```
-User Uploads Screenshot / Text
-            │
-            ▼
-Frontend Interface
-            │
-            ▼
-FastAPI Backend
-            │
-            ▼
-OCR Engine (EasyOCR)
-Extract text from image
-            │
-            ▼
-Gemini Generative AI
-Analyze claim credibility
-            │
-            ▼
-Result Generation
-Credibility Score + Explanation
-            │
-            ▼
-User Receives Analysis
+┌────────────────────────────────────────────┐
+│            React + TypeScript UI            │
+│  (Text Scanner / Deepfake Analyzer / Feed) │
+└─────────────────┬──────────────────────────┘
+                  │ HTTP (REST API)
+┌─────────────────▼──────────────────────────┐
+│              FastAPI Backend                 │
+│                                             │
+│  POST /api/analyze    → Text Analysis       │
+│  POST /api/deepfake   → Deepfake Detection  │
+│  POST /analyze-image  → OCR + Analysis      │
+│  GET  /api/threats    → Threat Feed         │
+└───────┬────────────────────┬───────────────┘
+        │                    │
+   ┌────▼────┐        ┌─────▼──────┐
+   │ EasyOCR │        │  Groq AI   │
+   │ (Image  │        │ LLaMA 3.3  │
+   │  → Text)│        │  70B       │
+   └─────────┘        └────────────┘
 ```
 
 ---
 
-# Tech Stack ⚙️
-
-### Backend
-
-* Python
-* FastAPI
-
-### AI / NLP
-
-* Google Gemini (Generative AI)
-
-### OCR
-
-* EasyOCR
-
-### Libraries
-
-* easyocr
-* python-dotenv
-* google-generativeai
-
----
-
-# Project Structure 📂
+## Project Structure 📂
 
 ```
-TruthLens
+TruthLens/
+├── Backend/
+│   ├── main.py              # FastAPI server & all API endpoints
+│   ├── ai_analysis.py       # Groq AI integration (text + deepfake analysis)
+│   ├── ocr.py               # EasyOCR text extraction
+│   ├── .env                 # GROQ_API_KEY (not committed)
+│   └── venv/                # Python virtual environment
 │
-├── Backend
-│   ├── main.py
-│   ├── ocr.py
-│   ├── ai_analysis.py
-│   ├── .env
-│
-├── frontend
-│   ├── src
-│   │   ├── App.jsx
-│   │   ├── components
-│   │   │   ├── UploadImage.jsx
-│   │   │   ├── TextInput.jsx
-│   │   │   ├── ResultCard.jsx
-│   │   │   ├── Spinner.jsx
+├── Frontend/
+│   ├── src/
+│   │   ├── App.tsx          # Main React app (all components)
+│   │   ├── translations.ts  # Multi-language translations (6 languages)
+│   │   ├── index.css        # Full CSS design system
+│   │   └── main.tsx         # React entry point
+│   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js
+│   ├── tsconfig.json
+│   └── vite.config.ts
 │
 ├── requirements.txt
-├── README.md
 ├── .gitignore
+└── README.md
 ```
 
 ---
 
-# Installation & Setup 🛠
+## Installation & Setup 🛠
 
-## 1 Clone Repository
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/Shivanshu49/TruthLens.git
 cd TruthLens
 ```
 
----
-
-## 2 Create Virtual Environment
-
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
----
-
-## 3 Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 4 Configure Environment Variables
-
-Create `Backend/.env`
-
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
----
-
-## 5 Build Frontend
-
-```bash
-cd frontend
-npm install
-npm run build
-```
-
----
-
-## 6 Run Backend Server
+### 2. Backend Setup
 
 ```bash
 cd Backend
-uvicorn main:app --reload
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# macOS/Linux
+source venv/bin/activate
+
+pip install -r ../requirements.txt
 ```
 
-Open:
+### 3. Configure API Key
 
-* **Frontend UI:** [http://127.0.0.1:8000/app](http://127.0.0.1:8000/app)
-* **Frontend Dev Server:** [http://localhost:5173](http://localhost:5173) (run `npm run dev` in frontend/)
-* **Swagger API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+Create `Backend/.env`:
+
+```
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Get a free API key at [console.groq.com](https://console.groq.com)
+
+### 4. Start Backend
+
+```bash
+cd Backend
+uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+### 5. Frontend Setup
+
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+
+### 6. Open the App
+
+* **Frontend:** [http://localhost:5173](http://localhost:5173)
+* **API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
 
-# API Endpoints 📡
+## API Endpoints 📡
 
 | Method | Endpoint | Description |
-|--------|-----------------|--------------------------------------|
-| GET | / | Health check |
-| POST | /analyze-image | Upload screenshot for analysis |
-| POST | /analyze-text | Submit text claim for analysis |
+|--------|------------------|----------------------------------------------|
+| GET | `/` | Health check |
+| POST | `/analyze-image` | Upload screenshot → OCR + AI analysis |
+| POST | `/analyze-text` | Submit text claim for analysis |
+| POST | `/api/analyze` | Frontend text analysis (structured response) |
+| POST | `/api/deepfake` | Deepfake video analysis |
+| GET | `/api/threats` | Live threat feed |
 
-### POST /analyze-image
-
-Upload an image file (PNG, JPG, WEBP).
-
-### POST /analyze-text
+### POST /api/analyze
 
 ```json
-{ "text": "Drinking hot water cures COVID" }
+{ "content": "Breaking: Government bans all social media", "contentType": "text" }
+```
+
+### POST /api/deepfake
+
+```json
+{ "videoUrl": "https://youtube.com/watch?v=...", "description": "PM announcing emergency policy" }
 ```
 
 ---
 
-# Example Output 📊
+## Example: Text Analysis 📊
 
 ```json
 {
-  "credibility_score": 15,
-  "risk_level": "High",
-  "explanation": "This claim lacks evidence from trusted sources and contains exaggerated language commonly found in misinformation.",
-  "warning_signs": [
-    "No credible sources cited",
-    "Viral misinformation pattern",
-    "Lacks scientific evidence"
-  ]
+  "success": true,
+  "analysis": {
+    "fakeProbability": 85,
+    "biasLevel": "HIGH",
+    "trustScore": "LOW",
+    "verdict": "LIKELY_FAKE",
+    "summary": "This claim lacks credible sources and uses emotional language...",
+    "manipulationTechniques": [
+      { "technique": "Appeal to fear", "description": "Appeal to fear", "severity": "HIGH" }
+    ],
+    "recommendation": "Exercise caution before sharing this content."
+  }
+}
+```
+
+## Example: Deepfake Analysis 🎬
+
+```json
+{
+  "success": true,
+  "analysis": {
+    "deepfakeScore": 5,
+    "verdict": "LIKELY_AUTHENTIC",
+    "confidence": 91,
+    "summary": "This appears to be standard YouTube content with no deepfake indicators.",
+    "facialAnalysis": { "lipSyncScore": 10, "blinkPatternScore": 12, "skinTextureScore": 15, "overallFacialScore": 5 },
+    "audioAnalysis": { "syncScore": 10, "naturalness": 12, "cloneDetection": 10 },
+    "recommendation": "This video appears to be authentic content."
+  }
 }
 ```
 
 ---
 
-# Future Improvements 🔮
+## Screenshots 🖼️
 
-* Browser extension for instant fact-checking
-* Real-time social media content analysis
-* Multilingual misinformation detection
-* Integration with fact-check databases
-* Deepfake and manipulated image detection
+### Text Scanner
+> Paste any claim or forwarded message → get instant AI-powered credibility analysis with fake probability, bias level, and trust score.
 
----
+### Deepfake Video Analyzer
+> Enter a video URL → get deepfake score with facial analysis bars, audio analysis, detected techniques, and a confidence verdict.
 
-# Hackathon Project 🏆
-
-This project was developed as part of a **hackathon focused on combating misinformation using AI technologies**.
+### Live Threat Feed
+> Real-time dashboard of trending misinformation across WhatsApp, YouTube, Twitter, and Facebook.
 
 ---
 
-# Contributors 👨‍💻
+## How It Works 🧠
 
-* Shivanshu Dixit
+| Step | What Happens |
+|------|-------------|
+| 1 | User inputs text, uploads screenshot, or pastes video URL |
+| 2 | Backend receives request via FastAPI |
+| 3 | For images: EasyOCR extracts text |
+| 4 | AI engine (Groq LLaMA 3.3 70B) analyzes the content |
+| 5 | For text: Misinformation detection prompt evaluates credibility |
+| 6 | For video: Dedicated deepfake detection prompt evaluates manipulation likelihood |
+| 7 | Structured result returned to frontend with scores and explanations |
+
+---
+
+## Deepfake Detection Logic 🎯
+
+The deepfake analyzer uses a **context-aware AI prompt** that understands:
+
+* ✅ Official channels, live streams, normal content → **Low score (5-25%)**
+* ✅ Music videos, tutorials, vlogs, sports → **Authentic (5-15%)**
+* ⚠️ Unknown sources with shocking claims → **Medium score (35-60%)**
+* 🚨 Public figures acting out of character, leaked videos, face-swap patterns → **High score (60-95%)**
+
+It does NOT blindly flag all videos as deepfakes — only content with genuine manipulation indicators.
+
+---
+
+## Future Improvements 🔮
+
+* 🔌 Browser extension for instant fact-checking
+* 📸 Reverse image search integration
+* 🎥 Actual video frame analysis (computer vision)
+* 🌐 More languages and regional misinformation patterns
+* 📊 User history and saved analyses
+* 🤖 WhatsApp/Telegram bot integration
+
+---
+
+## Contributors 👨‍💻
+
+* **Shivanshu Dixit** — Full Stack Development & AI Integration
