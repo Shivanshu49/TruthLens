@@ -1,8 +1,10 @@
 fastapi
 uvicorn
 python-dotenv
-easyocr
+pytesseract
 google-genai
 python-multipart
 pillow
 pydantic
+yt-dlp
+opencv-python
