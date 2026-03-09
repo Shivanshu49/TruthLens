@@ -1654,6 +1654,30 @@ body::after {
 }
 .scanner-input::placeholder { color: var(--text-muted); }
 
+/* ── IMAGE DROP ZONE ── */
+.image-drop-zone {
+  border: 2px dashed var(--glass-border);
+  border-radius: 12px;
+  padding: 32px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  background: var(--glass-bg);
+}
+.image-drop-zone:hover,
+.image-drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(74, 222, 128, 0.04);
+  box-shadow: var(--accent-glow);
+}
+.image-drop-zone.has-preview {
+  border-style: solid;
+  padding: 12px;
+}
+
 /* ── DEEPFAKE UI ── */
 .deepfake-ui { position: relative; }
 .deepfake-header {

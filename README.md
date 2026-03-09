@@ -2,7 +2,7 @@
 
 ### AI-Powered Misinformation & Deepfake Detection Platform
 
-TruthLens AI is a full-stack platform that helps users detect **misinformation in text, screenshots, and deepfake videos** using AI. Built with a **FastAPI** backend powered by **Groq AI (LLaMA 3.3 70B)** and a premium **React + TypeScript** frontend with glassmorphism UI, multi-language support, and real-time analysis.
+TruthLens AI is a full-stack platform that helps users detect **misinformation in text, screenshots, and deepfake videos** using AI. Built with a **FastAPI** backend powered by **Google Gemini AI (Gemini 2.5 Flash)** and a premium **React + TypeScript** frontend with glassmorphism UI, multi-language support, and real-time analysis.
 
 ---
 
@@ -49,7 +49,7 @@ TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platfor
 | Layer | Technology |
 |-------|-----------|
 | **Backend** | Python, FastAPI, Uvicorn |
-| **AI Engine** | Groq API (LLaMA 3.3 70B Versatile) |
+| **AI Engine** | Google Gemini API (Gemini 2.5 Flash) |
 | **OCR** | EasyOCR (pure Python, no system binaries) |
 | **Frontend** | React 19, TypeScript, Vite |
 | **Styling** | Custom CSS with glassmorphism design system |
@@ -75,9 +75,9 @@ TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platfor
 └───────┬────────────────────┬───────────────┘
         │                    │
    ┌────▼────┐        ┌─────▼──────┐
-   │ EasyOCR │        │  Groq AI   │
-   │ (Image  │        │ LLaMA 3.3  │
-   │  → Text)│        │  70B       │
+   │ EasyOCR │        │ Gemini AI  │
+   │ (Image  │        │ 2.5 Flash  │
+   │  → Text)│        │            │
    └─────────┘        └────────────┘
 ```
 
@@ -89,9 +89,9 @@ TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platfor
 TruthLens/
 ├── Backend/
 │   ├── main.py              # FastAPI server & all API endpoints
-│   ├── ai_analysis.py       # Groq AI integration (text + deepfake analysis)
+│   ├── ai_analysis.py       # Gemini AI integration (text + deepfake analysis)
 │   ├── ocr.py               # EasyOCR text extraction
-│   ├── .env                 # GROQ_API_KEY (not committed)
+│   ├── .env                 # GEMINI_API_KEY (not committed)
 │   └── venv/                # Python virtual environment
 │
 ├── Frontend/
@@ -141,10 +141,10 @@ pip install -r ../requirements.txt
 Create `Backend/.env`:
 
 ```
-GROQ_API_KEY=your_groq_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-Get a free API key at [console.groq.com](https://console.groq.com)
+Get a free API key at [Google AI Studio](https://aistudio.google.com/apikey)
 
 ### 4. Start Backend
 
@@ -251,7 +251,7 @@ npm run dev
 | 1 | User inputs text, uploads screenshot, or pastes video URL |
 | 2 | Backend receives request via FastAPI |
 | 3 | For images: EasyOCR extracts text |
-| 4 | AI engine (Groq LLaMA 3.3 70B) analyzes the content |
+| 4 | AI engine (Gemini 2.5 Flash) analyzes the content |
 | 5 | For text: Misinformation detection prompt evaluates credibility |
 | 6 | For video: Dedicated deepfake detection prompt evaluates manipulation likelihood |
 | 7 | Structured result returned to frontend with scores and explanations |

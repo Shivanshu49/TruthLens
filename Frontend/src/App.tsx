@@ -569,7 +569,7 @@ interface DeepfakeResult {
 }
 
 function Scanner({ lang }: { lang: Lang }) {
-    const [scanMode, setScanMode] = useState<'text' | 'video'>('text')
+    const [scanMode, setScanMode] = useState<'text' | 'video' | 'image'>('text')
 
     // Text scanner state
     const [input, setInput] = useState('')
@@ -584,6 +584,75 @@ function Scanner({ lang }: { lang: Lang }) {
     const [videoScanning, setVideoScanning] = useState(false)
     const [deepfakeResult, setDeepfakeResult] = useState<DeepfakeResult | null>(null)
     const [videoError, setVideoError] = useState('')
+
+    // Image scanner state
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [imageScanning, setImageScanning] = useState(false)
+    const [imageResult, setImageResult] = useState<{ extractedText: string; analysis: AnalysisResult } | null>(null)
+    const [imageError, setImageError] = useState('')
+    const [dragOver, setDragOver] = useState(false)
+
+    const handleImageSelect = (file: File) => {
+        if (!file.type.match(/^image\/(png|jpe?g|webp)$/)) {
+            setImageError(t(lang, 'imageInvalidType'))
+            return
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            setImageError(t(lang, 'imageTooBig'))
+            return
+        }
+        setImageFile(file)
+        setImageError('')
+        setImageResult(null)
+        const reader = new FileReader()
+        reader.onload = e => setImagePreview(e.target?.result as string)
+        reader.readAsDataURL(file)
+    }
+
+    const runImageScan = async () => {
+        if (!imageFile) return
+        setImageScanning(true)
+        setImageResult(null)
+        setImageError('')
+
+        try {
+            const formData = new FormData()
+            formData.append('file', imageFile)
+
+            const res = await fetch('http://localhost:8000/analyze-image', {
+                method: 'POST',
+                body: formData,
+            })
+            const data = await res.json()
+
+            if (data.extracted_text && !data.extracted_text.startsWith('OCR Error')) {
+                setImageResult({
+                    extractedText: data.extracted_text,
+                    analysis: {
+                        fakeProbability: Math.max(0, 100 - data.credibility_score),
+                        biasLevel: data.risk_level === 'High' ? 'HIGH' : data.risk_level === 'Medium' ? 'MEDIUM' : 'LOW',
+                        trustScore: data.risk_level === 'High' ? 'LOW' : data.risk_level === 'Medium' ? 'MEDIUM' : 'HIGH',
+                        verdict: data.credibility_score < 40 ? 'LIKELY_FAKE' : data.credibility_score < 65 ? 'POSSIBLY_MISLEADING' : 'LIKELY_AUTHENTIC',
+                        summary: data.explanation,
+                        manipulationTechniques: (data.warning_signs || []).slice(0, 3).map((s: string) => ({
+                            technique: s, description: s, severity: data.risk_level?.toUpperCase() || 'MEDIUM'
+                        })),
+                        redFlags: data.warning_signs || [],
+                        credibilitySignals: data.credibility_score >= 65 ? ['Consistent with expert sources'] : [],
+                        recommendation: data.credibility_score < 50 ? 'Exercise caution before sharing this content.' : 'This content appears reasonably credible.',
+                        educationalNote: 'Always verify news from multiple trusted sources before sharing.',
+                        overallScore: data.credibility_score,
+                    },
+                })
+            } else {
+                setImageError(data.detail || data.extracted_text || 'Failed to extract text from image.')
+            }
+        } catch {
+            setImageError(t(lang, 'imageBackendOffline'))
+        }
+        setImageScanning(false)
+    }
 
     const runScan = async () => {
         if (!input.trim()) return
@@ -700,6 +769,9 @@ function Scanner({ lang }: { lang: Lang }) {
                         </button>
                         <button className={`scanner-tab ${scanMode === 'video' ? 'active' : ''}`} onClick={() => setScanMode('video')}>
                             <span className="tab-icon">🎬</span> {t(lang, 'tabVideo')}
+                        </button>
+                        <button className={`scanner-tab ${scanMode === 'image' ? 'active' : ''}`} onClick={() => setScanMode('image')}>
+                            <span className="tab-icon">📷</span> {t(lang, 'tabImage')}
                         </button>
                     </div>
 
@@ -926,9 +998,117 @@ function Scanner({ lang }: { lang: Lang }) {
                         )}
                     </div>
                     )}
-                </div>
 
-                <div className="scanner-visual reveal-right">
+                    {/* ── IMAGE/SCREENSHOT SCANNER ── */}
+                    {scanMode === 'image' && (
+                    <div className="scanner-ui">
+                        <div
+                            className={`image-drop-zone ${dragOver ? 'drag-over' : ''} ${imagePreview ? 'has-preview' : ''}`}
+                            onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                            onDragLeave={() => setDragOver(false)}
+                            onDrop={e => {
+                                e.preventDefault()
+                                setDragOver(false)
+                                const file = e.dataTransfer.files?.[0]
+                                if (file) handleImageSelect(file)
+                            }}
+                            onClick={() => {
+                                const inp = document.createElement('input')
+                                inp.type = 'file'
+                                inp.accept = 'image/png,image/jpeg,image/webp'
+                                inp.onchange = () => { if (inp.files?.[0]) handleImageSelect(inp.files[0]) }
+                                inp.click()
+                            }}
+                        >
+                            {imagePreview ? (
+                                <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'contain' }} />
+                            ) : (
+                                <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <div style={{ fontSize: 40, marginBottom: 12 }}>📷</div>
+                                    <div style={{ fontSize: 14, marginBottom: 6 }}>{t(lang, 'imageDragDrop')}</div>
+                                    <div style={{ fontSize: 12, opacity: 0.6 }}>{t(lang, 'imageFormats')}</div>
+                                </div>
+                            )}
+                        </div>
+
+                        {imageFile && (
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, fontFamily: "'Space Mono', monospace" }}>
+                                {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
+                            </div>
+                        )}
+
+                        <button className="scan-btn" onClick={runImageScan} disabled={imageScanning || !imageFile}>
+                            {imageScanning ? t(lang, 'imageScanning') : imageResult ? t(lang, 'imageScanDone') : t(lang, 'imageScanBtn')}
+                        </button>
+
+                        {imageError && (
+                            <div style={{ marginTop: 12, padding: '10px 16px', fontSize: 12, fontFamily: "'Space Mono', monospace", color: 'var(--warning)', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.15)' }}>
+                                ⚠ {imageError}
+                            </div>
+                        )}
+
+                        {imageResult && (
+                            <div style={{ marginTop: 20, animation: 'fadeUp 0.5s ease' }}>
+                                {/* Extracted Text */}
+                                <div style={{ padding: 20, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', marginBottom: 12 }}>
+                                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, color: 'var(--violet)', marginBottom: 8 }}>
+                                        {t(lang, 'extractedText')}
+                                    </div>
+                                    <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                                        "{imageResult.extractedText}"
+                                    </div>
+                                </div>
+
+                                {/* Quick scores */}
+                                <div className="scan-indicators" style={{ animation: 'fadeUp 0.4s ease' }}>
+                                    <div className="indicator">
+                                        <span className="indicator-val red">{imageResult.analysis.fakeProbability}%</span>
+                                        <div className="indicator-label">{t(lang, 'fakeProbability')}</div>
+                                    </div>
+                                    <div className="indicator">
+                                        <span className="indicator-val yellow">{imageResult.analysis.biasLevel === 'MEDIUM' ? 'MED' : imageResult.analysis.biasLevel}</span>
+                                        <div className="indicator-label">{t(lang, 'biasLevel')}</div>
+                                    </div>
+                                    <div className="indicator">
+                                        <span className="indicator-val green">{imageResult.analysis.trustScore === 'MEDIUM' ? 'MED' : imageResult.analysis.trustScore}</span>
+                                        <div className="indicator-label">{t(lang, 'trustScore')}</div>
+                                    </div>
+                                </div>
+
+                                {/* Verdict */}
+                                <div style={{ padding: 20, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', marginBottom: 12 }}>
+                                    <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, color: 'var(--accent)', marginBottom: 8 }}>
+                                        {t(lang, 'aiVerdict')}: {imageResult.analysis.verdict.replace(/_/g, ' ')}
+                                    </div>
+                                    <div style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text-secondary)' }}>{imageResult.analysis.summary}</div>
+                                </div>
+
+                                {imageResult.analysis.manipulationTechniques?.length > 0 && (
+                                    <div style={{ padding: 20, background: 'rgba(240,96,112,0.04)', border: '1px solid rgba(240,96,112,0.12)', marginBottom: 12 }}>
+                                        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, color: 'var(--danger)', marginBottom: 10 }}>
+                                            {t(lang, 'manipulationDetected')}
+                                        </div>
+                                        {imageResult.analysis.manipulationTechniques.map((mt, i) => (
+                                            <div key={i} style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                                                <strong style={{ color: 'var(--text-primary)' }}>{mt.technique}</strong> ({mt.severity})
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {imageResult.analysis.educationalNote && (
+                                    <div style={{ padding: 20, background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.12)' }}>
+                                        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' as const, color: 'var(--accent)', marginBottom: 8 }}>
+                                            {t(lang, 'learnFromThis')}
+                                        </div>
+                                        <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text-secondary)' }}>{imageResult.analysis.educationalNote}</div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    )}
+                </div>
                     <div className="radar-wrap">
                         <svg className="radar-svg" viewBox="0 0 320 320">
                             <defs>

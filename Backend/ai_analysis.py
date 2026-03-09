@@ -1,156 +1,192 @@
-from groq import Groq
+from google import genai
 import os
-import re
+import json
+import logging
+import hashlib
+from functools import lru_cache
+
+logger = logging.getLogger("truthlens")
+
+_client = None
 
 
 def get_client():
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise ValueError("GROQ_API_KEY not set in .env file")
-    return Groq(api_key=api_key)
+    """Lazy-initialize the Gemini client. Raises ValueError if API key is missing."""
+    global _client
+    if _client is None:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "GEMINI_API_KEY not set. Add it to Backend/.env file:\n"
+                "GEMINI_API_KEY=your_api_key_here"
+            )
+        _client = genai.Client(api_key=api_key)
+    return _client
 
 
-def parse_analysis(raw_text):
-    """Parse Gemini's response into structured fields."""
-    result = {
-        "credibility_score": 50,
-        "risk_level": "Medium",
-        "explanation": "",
-        "warning_signs": []
-    }
+CLAIM_SYSTEM_PROMPT = """You are TruthLens AI, an expert misinformation detection system.
+You analyze claims for credibility using journalistic standards.
+You MUST respond with valid JSON only. No markdown, no code fences, no explanation outside JSON."""
 
-    score_match = re.search(r"Credibility Score:\s*(\d+)", raw_text)
-    if score_match:
-        result["credibility_score"] = int(score_match.group(1))
+CLAIM_USER_PROMPT = """Analyze this claim for misinformation:
 
-    risk_match = re.search(r"Risk Level:\s*(Low|Medium|High)", raw_text, re.IGNORECASE)
-    if risk_match:
-        result["risk_level"] = risk_match.group(1).capitalize()
+"{claim}"
 
-    explanation_match = re.search(r"Explanation:\s*(.+?)(?=Warning Signs:|$)", raw_text, re.DOTALL)
-    if explanation_match:
-        result["explanation"] = explanation_match.group(1).strip()
+Evaluate using these criteria:
+1. SOURCE CREDIBILITY: Does it cite reputable sources? Or anonymous/vague attribution?
+2. EMOTIONAL MANIPULATION: Does it use fear, outrage, or urgency to bypass critical thinking?
+3. FACTUAL ACCURACY: Are specific facts verifiable? Are statistics plausible?
+4. VIRAL PATTERNS: Does it match known misinformation patterns (forwarded chains, "share before deleted", fake authority)?
+5. LANGUAGE ANALYSIS: Exaggerated superlatives? ALL CAPS? Excessive punctuation?
+6. LOGICAL CONSISTENCY: Internal contradictions? Non-sequiturs?
 
-    signs_match = re.search(r"Warning Signs:(.*)", raw_text, re.DOTALL)
-    if signs_match:
-        signs_text = signs_match.group(1).strip()
-        signs = re.findall(r"[•\-\*]\s*(.+)", signs_text)
-        result["warning_signs"] = [s.strip() for s in signs if s.strip()]
+Return this exact JSON structure:
+{{
+  "credibility_score": <0-100 integer>,
+  "risk_level": "<Low|Medium|High>",
+  "explanation": "<2-3 sentence assessment>",
+  "warning_signs": ["<sign1>", "<sign2>", "<sign3>"],
+  "claim_type": "<news|health|political|financial|social|other>",
+  "manipulation_techniques": [
+    {{"technique": "<name>", "evidence": "<specific text or pattern found>", "severity": "<LOW|MEDIUM|HIGH>"}}
+  ]
+}}"""
 
-    return result
+
+def _hash_text(text: str) -> str:
+    return hashlib.sha256(text.strip().lower().encode()).hexdigest()
+
+
+@lru_cache(maxsize=128)
+def _cached_analyze(text_hash: str, text: str):
+    """Cached AI analysis — same claim text returns cached result."""
+    client = get_client()
+    prompt = CLAIM_SYSTEM_PROMPT + "\n\n" + CLAIM_USER_PROMPT.format(claim=text)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "temperature": 0.1,
+            "max_output_tokens": 2048,
+        },
+    )
+    return response.text or ""
 
 
 def analyze_claim(text):
+    raw = ""
     try:
-        client = get_client()
+        text_hash = _hash_text(text)
+        raw = _cached_analyze(text_hash, text.strip())
+        result = json.loads(raw)
 
-        prompt = f"""
-You are a misinformation detection expert. Analyze this news claim carefully.
-
-Claim:
-{text}
-
-Respond in this EXACT format:
-Credibility Score: [0-100]
-Risk Level: [Low/Medium/High]
-Explanation: [2-3 sentence explanation of why this claim may or may not be misinformation]
-Warning Signs:
-• [sign 1]
-• [sign 2]
-• [sign 3]
-
-Warning signs examples: Emotional language, No credible sources cited, Viral misinformation pattern, Exaggerated claims, Lack of scientific evidence, Misleading statistics, Appeal to fear, Unverified origin.
-If the claim appears credible, list positive indicators instead (e.g., Cites reputable sources, Consistent with expert consensus).
-"""
-
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}]
-        )
-
-        return parse_analysis(response.choices[0].message.content)
-
+        # Ensure required fields with defaults
+        return {
+            "credibility_score": max(0, min(100, int(result.get("credibility_score", 50)))),
+            "risk_level": result.get("risk_level", "Medium"),
+            "explanation": result.get("explanation", ""),
+            "warning_signs": result.get("warning_signs", []),
+            "claim_type": result.get("claim_type", "other"),
+            "manipulation_techniques": result.get("manipulation_techniques", []),
+        }
+    except json.JSONDecodeError as e:
+        logger.warning(f"JSON parse failed, falling back to regex: {e}")
+        return _fallback_parse(raw)
     except Exception as e:
+        logger.error(f"analyze_claim error: {e}")
         return {
             "credibility_score": 0,
             "risk_level": "Unknown",
-            "explanation": f"AI Analysis Error: {str(e)}",
-            "warning_signs": []
+            "explanation": f"Analysis temporarily unavailable.",
+            "warning_signs": [],
+            "claim_type": "other",
+            "manipulation_techniques": [],
         }
 
 
-def parse_deepfake_analysis(raw_text):
-    """Parse AI response for deepfake video analysis."""
+def _fallback_parse(raw_text):
+    """Regex fallback if JSON parsing fails."""
+    import re
     result = {
-        "deepfake_score": 25,
-        "risk_level": "Low",
-        "explanation": "",
-        "indicators": []
+        "credibility_score": 50, "risk_level": "Medium",
+        "explanation": "", "warning_signs": [],
+        "claim_type": "other", "manipulation_techniques": [],
     }
-
-    score_match = re.search(r"Deepfake Score:\s*(\d+)", raw_text)
+    score_match = re.search(r"credibility_score[\"']?\s*:\s*(\d+)", raw_text)
     if score_match:
-        result["deepfake_score"] = max(0, min(100, int(score_match.group(1))))
-
-    risk_match = re.search(r"Risk Level:\s*(Low|Medium|High)", raw_text, re.IGNORECASE)
+        result["credibility_score"] = max(0, min(100, int(score_match.group(1))))
+    risk_match = re.search(r"risk_level[\"']?\s*:\s*[\"'](Low|Medium|High)", raw_text, re.IGNORECASE)
     if risk_match:
         result["risk_level"] = risk_match.group(1).capitalize()
-
-    explanation_match = re.search(r"Explanation:\s*(.+?)(?=Indicators:|$)", raw_text, re.DOTALL)
-    if explanation_match:
-        result["explanation"] = explanation_match.group(1).strip()
-
-    indicators_match = re.search(r"Indicators:(.*)", raw_text, re.DOTALL)
-    if indicators_match:
-        indicators_text = indicators_match.group(1).strip()
-        indicators = re.findall(r"[•\-\*]\s*(.+)", indicators_text)
-        result["indicators"] = [s.strip() for s in indicators if s.strip()]
-
+    expl_match = re.search(r"explanation[\"']?\s*:\s*[\"'](.+?)[\"']", raw_text, re.DOTALL)
+    if expl_match:
+        result["explanation"] = expl_match.group(1).strip()
     return result
 
 
-def analyze_deepfake(video_url, description=""):
-    """Dedicated deepfake analysis with a context-aware prompt."""
-    try:
-        client = get_client()
+DEEPFAKE_SYSTEM_PROMPT = """You are a deepfake video detection expert.
+You assess the likelihood that video content is AI-generated or manipulated.
+You MUST respond with valid JSON only. No markdown, no code fences."""
 
-        prompt = f"""You are a deepfake video detection expert. Your job is to assess the LIKELIHOOD that a video is AI-generated or manipulated (deepfake), based on the video URL source and any description provided.
+DEEPFAKE_USER_PROMPT = """Assess this video for deepfake likelihood:
+
+Video URL: {video_url}
+Description: {description}
 
 IMPORTANT RULES:
-- Videos from official/verified channels (news outlets, government, celebrities' official accounts, major brands) are LIKELY AUTHENTIC (low deepfake score 5-20).
-- Standard YouTube videos, vlogs, tutorials, music videos, movie trailers, live streams, and entertainment content are LIKELY AUTHENTIC (low deepfake score 5-25).
-- Videos with ordinary everyday content (cooking, gaming, travel, sports, education) are LIKELY AUTHENTIC (low deepfake score 5-15).
-- Only flag as potential deepfake (score 50+) if the description specifically mentions: a public figure saying something out of character, political manipulation, celebrity doing something unusual, face-swapped content, AI-generated voice, or urgent/shocking claims attributed to known people.
-- A video being "unverifiable" does NOT make it a deepfake. Most normal videos are simply regular content.
+- Videos from official/verified channels (news, government, celebrities' official accounts) are LIKELY AUTHENTIC (score 5-20).
+- Standard YouTube content (vlogs, tutorials, music, trailers, live streams, entertainment) is LIKELY AUTHENTIC (score 5-25).
+- Everyday content (cooking, gaming, travel, sports, education) is LIKELY AUTHENTIC (score 5-15).
+- Only flag as potential deepfake (score 50+) if the description mentions: a public figure saying something out of character, political manipulation, celebrity doing something unusual, face-swapped content, AI-generated voice, or shocking claims attributed to known people.
+- A video being "unverifiable" does NOT make it a deepfake. Most videos are real.
 - Live streams and real-time content are very unlikely to be deepfakes (score 5-15).
 - Do NOT default to high scores. Most videos on the internet are real.
 
-Video URL: {video_url}
-Description: {description if description else "No description provided"}
+Return this exact JSON:
+{{
+  "deepfake_score": <0-100 integer>,
+  "risk_level": "<Low|Medium|High>",
+  "explanation": "<2-3 sentences. Be specific about WHY.>",
+  "indicators": ["<indicator1>", "<indicator2>", "<indicator3>"]
+}}"""
 
-Respond in this EXACT format:
-Deepfake Score: [0-100] (0=definitely real, 100=definitely deepfake)
-Risk Level: [Low/Medium/High]
-Explanation: [2-3 sentences explaining your assessment. Be specific about WHY you think it is or isn't a deepfake.]
-Indicators:
-• [indicator 1]
-• [indicator 2]
-• [indicator 3]
 
-For AUTHENTIC content, list positive indicators like: Official source, Normal everyday content, Consistent with channel history, Live stream content, No manipulation signs.
-For SUSPICIOUS content, list concerns like: Public figure acting out of character, Viral claim without verification, Known deepfake pattern, Urgent political content from unknown source."""
+@lru_cache(maxsize=64)
+def _cached_deepfake(url_hash: str, video_url: str, description: str):
+    """Cached deepfake analysis."""
+    client = get_client()
+    prompt = DEEPFAKE_SYSTEM_PROMPT + "\n\n" + DEEPFAKE_USER_PROMPT.format(
+        video_url=video_url,
+        description=description or "No description provided"
+    )
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "temperature": 0.1,
+            "max_output_tokens": 800,
+        },
+    )
+    return response.text or ""
 
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}]
-        )
 
-        return parse_deepfake_analysis(response.choices[0].message.content)
+def analyze_deepfake(video_url, description=""):
+    try:
+        url_hash = _hash_text(video_url + description)
+        raw = _cached_deepfake(url_hash, video_url, description)
+        result = json.loads(raw)
 
-    except Exception as e:
         return {
-            "deepfake_score": 25,
-            "risk_level": "Unknown",
-            "explanation": f"AI Analysis Error: {str(e)}",
-            "indicators": []
+            "deepfake_score": max(0, min(100, int(result.get("deepfake_score", 25)))),
+            "risk_level": result.get("risk_level", "Low"),
+            "explanation": result.get("explanation", ""),
+            "indicators": result.get("indicators", []),
         }
+    except json.JSONDecodeError:
+        logger.warning("Deepfake JSON parse failed")
+        return {"deepfake_score": 25, "risk_level": "Low", "explanation": "Analysis could not parse result.", "indicators": []}
+    except Exception as e:
+        logger.error(f"analyze_deepfake error: {e}")
+        return {"deepfake_score": 25, "risk_level": "Unknown", "explanation": "Analysis temporarily unavailable.", "indicators": []}

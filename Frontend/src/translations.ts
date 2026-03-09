@@ -73,6 +73,7 @@ type TranslationKeys = {
     scannerDesc: string
     tabText: string
     tabVideo: string
+    tabImage: string
     textPlaceholder: string
     scanBtnAnalyze: string
     scanBtnScanning: string
@@ -108,6 +109,15 @@ type TranslationKeys = {
     accuracy: string
     neuralActive: string
     geminiProcessing: string
+    imageDragDrop: string
+    imageFormats: string
+    imageScanning: string
+    imageScanDone: string
+    imageScanBtn: string
+    imageInvalidType: string
+    imageTooBig: string
+    imageBackendOffline: string
+    extractedText: string
 
     // Features
     featuresLabel: string
@@ -249,9 +259,10 @@ const en: TranslationKeys = {
     scannerDesc: 'Paste any news headline, social media post, WhatsApp message, or video link and get an instant AI-powered analysis.',
     tabText: 'Text Analysis',
     tabVideo: 'Deepfake Video Checker',
+    tabImage: 'Screenshot / Image',
     textPlaceholder: 'Paste suspicious content here...\n\ne.g. "Government bans all online payments from midnight tonight — forward to your contacts!"',
     scanBtnAnalyze: '⟶  Analyze for Misinformation',
-    scanBtnScanning: '⟳  Gemini AI Analyzing...',
+    scanBtnScanning: '⟳  AI Analyzing...',
     scanBtnDone: '✓  Analysis Complete — Scan Again',
     fakeProbability: 'Fake Probability',
     biasLevel: 'Bias Level',
@@ -283,7 +294,16 @@ const en: TranslationKeys = {
     credibility: 'Credibility',
     accuracy: 'Accuracy',
     neuralActive: 'NEURAL NETWORK ACTIVE',
-    geminiProcessing: 'GEMINI AI PROCESSING',
+    geminiProcessing: 'AI ENGINE PROCESSING',
+    imageDragDrop: 'Drag & drop a screenshot here, or click to browse',
+    imageFormats: 'PNG, JPG, WEBP — max 10 MB',
+    imageScanning: '🔍 Extracting text & analyzing...',
+    imageScanDone: '✅ Analysis Complete',
+    imageScanBtn: '🔬 Scan Screenshot',
+    imageInvalidType: 'Please upload a PNG, JPG, or WEBP image.',
+    imageTooBig: 'File too large. Maximum size is 10 MB.',
+    imageBackendOffline: 'Backend offline — start the backend for image analysis.',
+    extractedText: 'EXTRACTED TEXT (OCR)',
 
     // Features
     featuresLabel: 'Capabilities',
@@ -425,9 +445,10 @@ const hi: TranslationKeys = {
     scannerDesc: 'कोई भी समाचार शीर्षक, सोशल मीडिया पोस्ट, व्हाट्सएप संदेश या वीडियो लिंक पेस्ट करें और तुरंत AI-संचालित विश्लेषण प्राप्त करें।',
     tabText: 'टेक्स्ट विश्लेषण',
     tabVideo: 'डीपफेक वीडियो चेकर',
+    tabImage: 'स्क्रीनशॉट / छवि',
     textPlaceholder: 'संदिग्ध सामग्री यहाँ पेस्ट करें...\n\nउदा. "सरकार ने आज रात 12 बजे से सभी ऑनलाइन भुगतान बंद कर दिए — अपने संपर्कों को फॉरवर्ड करें!"',
     scanBtnAnalyze: '⟶  गलत सूचना के लिए विश्लेषण करें',
-    scanBtnScanning: '⟳  Gemini AI विश्लेषण कर रहा है...',
+    scanBtnScanning: '⟳  AI विश्लेषण कर रहा है...',
     scanBtnDone: '✓  विश्लेषण पूरा — फिर से स्कैन करें',
     fakeProbability: 'फेक संभावना',
     biasLevel: 'पूर्वाग्रह स्तर',
@@ -459,7 +480,16 @@ const hi: TranslationKeys = {
     credibility: 'विश्वसनीयता',
     accuracy: 'सटीकता',
     neuralActive: 'न्यूरल नेटवर्क सक्रिय',
-    geminiProcessing: 'GEMINI AI प्रोसेसिंग',
+    geminiProcessing: 'AI इंजन प्रोसेसिंग',
+    imageDragDrop: 'स्क्रीनशॉट यहाँ खींचें और छोड़ें, या ब्राउज़ करें',
+    imageFormats: 'PNG, JPG, WEBP — अधिकतम 10 MB',
+    imageScanning: '🔍 टेक्स्ट निकाल रहे हैं और विश्लेषण कर रहे हैं...',
+    imageScanDone: '✅ विश्लेषण पूर्ण',
+    imageScanBtn: '🔬 स्क्रीनशॉट स्कैन करें',
+    imageInvalidType: 'कृपया PNG, JPG, या WEBP छवि अपलोड करें।',
+    imageTooBig: 'फ़ाइल बहुत बड़ी है। अधिकतम आकार 10 MB है।',
+    imageBackendOffline: 'बैकएंड ऑफ़लाइन — छवि विश्लेषण के लिए बैकएंड शुरू करें।',
+    extractedText: 'निकाला गया टेक्स्ट (OCR)',
 
     // Features
     featuresLabel: 'क्षमताएँ',
@@ -601,9 +631,10 @@ const ta: TranslationKeys = {
     scannerDesc: 'எந்த செய்தி தலைப்பு, சமூக ஊடக பதிவு, வாட்ஸ்அப் செய்தி அல்லது வீடியோ இணைப்பை ஒட்டி உடனடி AI பகுப்பாய்வு பெறுங்கள்.',
     tabText: 'உரை பகுப்பாய்வு',
     tabVideo: 'டீப்ஃபேக் வீடியோ சோதனை',
+    tabImage: 'ஸ்கிரீன்ஷாட் / படம்',
     textPlaceholder: 'சந்தேகத்திற்குரிய உள்ளடக்கத்தை இங்கே ஒட்டுங்கள்...\n\nஉதா. "அரசு இன்று நள்ளிரவு முதல் அனைத்து ஆன்லைன் கொடுப்பனவுகளையும் தடை செய்தது!"',
     scanBtnAnalyze: '⟶  தவறான தகவலுக்கு பகுப்பாய்வு செய்',
-    scanBtnScanning: '⟳  Gemini AI பகுப்பாய்வு செய்கிறது...',
+    scanBtnScanning: '⟳  AI பகுப்பாய்வு செய்கிறது...',
     scanBtnDone: '✓  பகுப்பாய்வு முடிந்தது — மீண்டும் ஸ்கேன்',
     fakeProbability: 'போலி நிகழ்தகவு',
     biasLevel: 'சார்பு நிலை',
@@ -635,7 +666,16 @@ const ta: TranslationKeys = {
     credibility: 'நம்பகத்தன்மை',
     accuracy: 'துல்லியம்',
     neuralActive: 'நியூரல் நெட்வொர்க் செயலில்',
-    geminiProcessing: 'GEMINI AI செயலாக்கம்',
+    geminiProcessing: 'AI இயந்திரம் செயலாக்கம்',
+    imageDragDrop: 'ஸ்கிரீன்ஷாட்டை இங்கே இழுத்து விடுங்கள்',
+    imageFormats: 'PNG, JPG, WEBP — அதிகபட்சம் 10 MB',
+    imageScanning: '🔍 உரை பிரித்தெடுத்து பகுப்பாய்வு...',
+    imageScanDone: '✅ பகுப்பாய்வு முடிந்தது',
+    imageScanBtn: '🔬 ஸ்கிரீன்ஷாட் ஸ்கேன்',
+    imageInvalidType: 'PNG, JPG, அல்லது WEBP படத்தை பதிவேற்றவும்.',
+    imageTooBig: 'கோப்பு மிகப் பெரியது. அதிகபட்சம் 10 MB.',
+    imageBackendOffline: 'பின்னணி ஆஃப்லைன் — படப் பகுப்பாய்வுக்கு சர்வரை தொடங்கவும்.',
+    extractedText: 'பிரித்தெடுக்கப்பட்ட உரை (OCR)',
 
     // Features
     featuresLabel: 'திறன்கள்',
@@ -777,9 +817,10 @@ const te: TranslationKeys = {
     scannerDesc: 'ఏదైనా వార్తా శీర్షిక, సోషల్ మీడియా పోస్ట్, వాట్సాప్ మెసేజ్ లేదా వీడియో లింక్‌ను పేస్ట్ చేసి తక్షణ AI విశ్లేషణ పొందండి.',
     tabText: 'టెక్స్ట్ విశ్లేషణ',
     tabVideo: 'డీప్‌ఫేక్ వీడియో చెకర్',
+    tabImage: 'స్క్రీన్‌షాట్ / చిత్రం',
     textPlaceholder: 'అనుమానాస్పద కంటెంట్ ఇక్కడ పేస్ట్ చేయండి...\n\nఉదా. "ప్రభుత్వం ఈ రోజు అర్ధరాత్రి నుండి అన్ని ఆన్‌లైన్ చెల్లింపులను నిషేధించింది!"',
     scanBtnAnalyze: '⟶  తప్పుడు సమాచారం కోసం విశ్లేషించు',
-    scanBtnScanning: '⟳  Gemini AI విశ్లేషిస్తోంది...',
+    scanBtnScanning: '⟳  AI విశ్లేషిస్తోంది...',
     scanBtnDone: '✓  విశ్లేషణ పూర్తయింది — మళ్ళీ స్కాన్',
     fakeProbability: 'ఫేక్ సంభావ్యత',
     biasLevel: 'పక్షపాత స్థాయి',
@@ -811,7 +852,16 @@ const te: TranslationKeys = {
     credibility: 'విశ్వసనీయత',
     accuracy: 'ఖచ్చితత్వం',
     neuralActive: 'న్యూరల్ నెట్‌వర్క్ యాక్టివ్',
-    geminiProcessing: 'GEMINI AI ప్రాసెసింగ్',
+    geminiProcessing: 'AI ఇంజిన్ ప్రాసెసింగ్',
+    imageDragDrop: 'స్క్రీన్‌షాట్‌ను ఇక్కడ డ్రాగ్ & డ్రాప్ చేయండి',
+    imageFormats: 'PNG, JPG, WEBP — గరిష్టం 10 MB',
+    imageScanning: '🔍 టెక్స్ట్ సేకరించి విశ్లేషిస్తున్నాం...',
+    imageScanDone: '✅ విశ్లేషణ పూర్తయింది',
+    imageScanBtn: '🔬 స్క్రీన్‌షాట్ స్కాన్',
+    imageInvalidType: 'దయచేసి PNG, JPG, లేదా WEBP చిత్రాన్ని అప్‌లోడ్ చేయండి.',
+    imageTooBig: 'ఫైల్ చాలా పెద్దది. గరిష్టం 10 MB.',
+    imageBackendOffline: 'బ్యాకెండ్ ఆఫ్‌లైన్ — చిత్ర విశ్లేషణ కోసం సర్వర్ ప్రారంభించండి.',
+    extractedText: 'సేకరించిన టెక్స్ట్ (OCR)',
 
     // Features
     featuresLabel: 'సామర్థ్యాలు',
@@ -953,9 +1003,10 @@ const bn: TranslationKeys = {
     scannerDesc: 'যেকোনো সংবাদ শিরোনাম, সোশ্যাল মিডিয়া পোস্ট, হোয়াটসঅ্যাপ বার্তা বা ভিডিও লিঙ্ক পেস্ট করুন এবং তাৎক্ষণিক AI বিশ্লেষণ পান।',
     tabText: 'টেক্সট বিশ্লেষণ',
     tabVideo: 'ডীপফেক ভিডিও চেকার',
+    tabImage: 'স্ক্রিনশট / ছবি',
     textPlaceholder: 'সন্দেহজনক বিষয়বস্তু এখানে পেস্ট করুন...\n\nযেমন "সরকার আজ মধ্যরাত থেকে সমস্ত অনলাইন পেমেন্ট নিষিদ্ধ করেছে!"',
     scanBtnAnalyze: '⟶  ভুল তথ্যের জন্য বিশ্লেষণ করুন',
-    scanBtnScanning: '⟳  Gemini AI বিশ্লেষণ করছে...',
+    scanBtnScanning: '⟳  AI বিশ্লেষণ করছে...',
     scanBtnDone: '✓  বিশ্লেষণ সম্পূর্ণ — আবার স্ক্যান করুন',
     fakeProbability: 'ফেক সম্ভাবনা',
     biasLevel: 'পক্ষপাত স্তর',
@@ -987,7 +1038,16 @@ const bn: TranslationKeys = {
     credibility: 'বিশ্বাসযোগ্যতা',
     accuracy: 'নির্ভুলতা',
     neuralActive: 'নিউরাল নেটওয়ার্ক সক্রিয়',
-    geminiProcessing: 'GEMINI AI প্রসেসিং',
+    geminiProcessing: 'AI ইঞ্জিন প্রসেসিং',
+    imageDragDrop: 'স্ক্রিনশট এখানে টেনে আনুন বা ব্রাউজ করুন',
+    imageFormats: 'PNG, JPG, WEBP — সর্বাধিক 10 MB',
+    imageScanning: '🔍 টেক্সট বের করে বিশ্লেষণ করছি...',
+    imageScanDone: '✅ বিশ্লেষণ সম্পন্ন',
+    imageScanBtn: '🔬 স্ক্রিনশট স্ক্যান',
+    imageInvalidType: 'দয়া করে PNG, JPG, বা WEBP ছবি আপলোড করুন।',
+    imageTooBig: 'ফাইল খুব বড়। সর্বাধিক 10 MB।',
+    imageBackendOffline: 'ব্যাকএন্ড অফলাইন — ছবি বিশ্লেষণের জন্য সার্ভার চালু করুন।',
+    extractedText: 'নিষ্কাশিত টেক্সট (OCR)',
 
     // Features
     featuresLabel: 'সক্ষমতা',
@@ -1129,9 +1189,10 @@ const mr: TranslationKeys = {
     scannerDesc: 'कोणतीही बातमी शीर्षक, सोशल मीडिया पोस्ट, व्हॉट्सअॅप संदेश किंवा व्हिडिओ लिंक पेस्ट करा आणि तात्काळ AI विश्लेषण मिळवा.',
     tabText: 'मजकूर विश्लेषण',
     tabVideo: 'डीपफेक व्हिडिओ तपासणी',
+    tabImage: 'स्क्रीनशॉट / प्रतिमा',
     textPlaceholder: 'संशयास्पद सामग्री येथे पेस्ट करा...\n\nउदा. "सरकारने आजपासून सर्व ऑनलाइन पेमेंट बंद केले — आपल्या संपर्कांना फॉरवर्ड करा!"',
     scanBtnAnalyze: '⟶  चुकीच्या माहितीसाठी विश्लेषण करा',
-    scanBtnScanning: '⟳  Gemini AI विश्लेषण करत आहे...',
+    scanBtnScanning: '⟳  AI विश्लेषण करत आहे...',
     scanBtnDone: '✓  विश्लेषण पूर्ण — पुन्हा स्कॅन करा',
     fakeProbability: 'फेक शक्यता',
     biasLevel: 'पक्षपात पातळी',
@@ -1163,7 +1224,16 @@ const mr: TranslationKeys = {
     credibility: 'विश्वासार्हता',
     accuracy: 'अचूकता',
     neuralActive: 'न्यूरल नेटवर्क सक्रिय',
-    geminiProcessing: 'GEMINI AI प्रोसेसिंग',
+    geminiProcessing: 'AI इंजिन प्रोसेसिंग',
+    imageDragDrop: 'स्क्रीनशॉट इथे ड्रॅग करा किंवा ब्राउज करा',
+    imageFormats: 'PNG, JPG, WEBP — कमाल 10 MB',
+    imageScanning: '🔍 मजकूर काढत आहे आणि विश्लेषण करत आहे...',
+    imageScanDone: '✅ विश्लेषण पूर्ण',
+    imageScanBtn: '🔬 स्क्रीनशॉट स्कॅन',
+    imageInvalidType: 'कृपया PNG, JPG, किंवा WEBP प्रतिमा अपलोड करा.',
+    imageTooBig: 'फाइल खूप मोठी आहे. कमाल 10 MB.',
+    imageBackendOffline: 'बॅकएंड ऑफलाइन — प्रतिमा विश्लेषणासाठी सर्व्हर सुरू करा.',
+    extractedText: 'काढलेला मजकूर (OCR)',
 
     // Features
     featuresLabel: 'क्षमता',

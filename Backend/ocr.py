@@ -1,11 +1,23 @@
 import easyocr
+import logging
 
-# Initialize reader once (downloads model on first run)
-reader = easyocr.Reader(['en'], gpu=False)
+logger = logging.getLogger("truthlens")
+
+_reader = None
+
+
+def _get_reader():
+    """Lazy-load EasyOCR reader on first use instead of at import time."""
+    global _reader
+    if _reader is None:
+        logger.info("Initializing EasyOCR reader (first use)...")
+        _reader = easyocr.Reader(['en'], gpu=False)
+    return _reader
 
 
 def extract_text_from_image(image_path: str) -> str:
     try:
+        reader = _get_reader()
         results = reader.readtext(image_path, detail=0)
 
         if results:

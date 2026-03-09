@@ -1,18 +1,28 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import shutil
 import os
 import uuid
+import logging
 
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("truthlens")
 
 from ocr import extract_text_from_image
 from ai_analysis import analyze_claim, analyze_deepfake
 
 app = FastAPI(title="TruthLens AI", description="Fake News Screenshot Analyzer")
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 # Allow frontend to connect
 app.add_middleware(
@@ -40,6 +50,14 @@ async def analyze_image(file: UploadFile = File(...)):
     allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail=f"Invalid file type: {file.content_type}. Upload PNG, JPG, or WEBP.")
+
+    # Check file size
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 10 MB.")
+    await file.seek(0)
+
+    logger.info(f"Image upload: {file.content_type}, {len(contents)} bytes")
 
     # Save with unique name to avoid conflicts
     filename = file.filename or "upload.png"
@@ -76,17 +94,17 @@ async def analyze_image(file: UploadFile = File(...)):
 
 
 class TextRequest(BaseModel):
-    text: str
+    text: str = Field(..., min_length=1, max_length=5000)
 
 
 class AnalyzeRequest(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1, max_length=5000)
     contentType: str = "text"
 
 
 class DeepfakeRequest(BaseModel):
-    videoUrl: str
-    description: str = ""
+    videoUrl: str = Field(..., min_length=1, max_length=2000)
+    description: str = Field("", max_length=2000)
 
 
 @app.post("/analyze-text")
@@ -94,6 +112,7 @@ def analyze_text(request: TextRequest):
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
 
+    logger.info(f"Text analysis request: {len(request.text)} chars")
     analysis = analyze_claim(request.text)
 
     return {
@@ -112,6 +131,7 @@ def api_analyze(request: AnalyzeRequest):
         return {"success": False, "message": "Content cannot be empty."}
 
     try:
+        logger.info(f"API analyze: {len(request.content)} chars, type={request.contentType}")
         analysis = analyze_claim(request.content)
         score = analysis["credibility_score"]
         risk = analysis["risk_level"]
@@ -129,8 +149,12 @@ def api_analyze(request: AnalyzeRequest):
                 "verdict": "LIKELY_FAKE" if fake_prob > 60 else "POSSIBLY_MISLEADING" if fake_prob > 35 else "LIKELY_AUTHENTIC",
                 "summary": analysis["explanation"],
                 "manipulationTechniques": [
-                    {"technique": sign, "description": sign, "severity": risk.upper()}
-                    for sign in analysis.get("warning_signs", [])[:3]
+                    {
+                        "technique": mt.get("technique", mt) if isinstance(mt, dict) else str(mt),
+                        "description": mt.get("evidence", mt.get("technique", "")) if isinstance(mt, dict) else str(mt),
+                        "severity": mt.get("severity", risk.upper()) if isinstance(mt, dict) else risk.upper(),
+                    }
+                    for mt in (analysis.get("manipulation_techniques") or analysis.get("warning_signs") or [])[:3]
                 ],
                 "redFlags": analysis.get("warning_signs", []),
                 "credibilitySignals": [] if fake_prob > 50 else ["Consistent with expert sources"],
