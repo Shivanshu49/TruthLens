@@ -2,7 +2,15 @@
 
 ### AI-Powered Misinformation & Deepfake Detection Platform
 
+> **[Live Demo](https://truth-lens-nine-sand.vercel.app/)** &nbsp;|&nbsp; **[API](https://truthlens-gxnp.onrender.com/docs)**
+
 TruthLens AI is a full-stack platform that helps users detect **misinformation in text, screenshots, and deepfake videos** using AI. Built with a **FastAPI** backend powered by **Google Gemini AI (Gemini 2.5 Flash)** and a premium **React + TypeScript** frontend with glassmorphism UI, multi-language support, and real-time analysis.
+
+| | URL |
+|---|---|
+| **Frontend** | https://truth-lens-nine-sand.vercel.app/ |
+| **Backend API** | https://truthlens-gxnp.onrender.com |
+| **API Docs** | https://truthlens-gxnp.onrender.com/docs |
 
 ---
 
@@ -24,8 +32,8 @@ Users lack tools to **quickly verify content before sharing** — TruthLens AI s
 TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platform:
 
 1. **Text Analysis** — Paste any claim, headline, or forwarded message → get AI-powered credibility scoring
-2. **Screenshot OCR** — Upload a screenshot → EasyOCR extracts text → AI analyzes the claim
-3. **Deepfake Video Detection** — Paste a video URL + optional description → AI evaluates deepfake likelihood with facial analysis, audio analysis, and technique detection
+2. **Screenshot OCR** — Upload a screenshot → Tesseract OCR extracts text → AI analyzes the claim
+3. **Deepfake Video Detection** — Paste a video URL → real video frames are extracted with yt-dlp + OpenCV → Gemini Vision analyzes each frame for deepfake indicators
 4. **Live Threat Feed** — Dashboard showing trending misinformation threats across platforms
 
 ---
@@ -50,9 +58,11 @@ TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platfor
 |-------|-----------|
 | **Backend** | Python, FastAPI, Uvicorn |
 | **AI Engine** | Google Gemini API (Gemini 2.5 Flash) |
-| **OCR** | EasyOCR (pure Python, no system binaries) |
+| **OCR** | pytesseract + Tesseract |
+| **Video Analysis** | yt-dlp, OpenCV (real frame extraction) |
 | **Frontend** | React 19, TypeScript, Vite |
 | **Styling** | Custom CSS with glassmorphism design system |
+| **Deployment** | Vercel (frontend), Render (backend) |
 | **Languages** | 6 languages (EN, HI, TA, TE, BN, MR) |
 
 ---
@@ -61,24 +71,25 @@ TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platfor
 
 ```
 ┌────────────────────────────────────────────┐
-│            React + TypeScript UI            │
+│  React + TypeScript UI  (Vercel)           │
 │  (Text Scanner / Deepfake Analyzer / Feed) │
 └─────────────────┬──────────────────────────┘
-                  │ HTTP (REST API)
+                  │ HTTPS (REST API)
 ┌─────────────────▼──────────────────────────┐
-│              FastAPI Backend                 │
+│         FastAPI Backend  (Render)           │
 │                                             │
 │  POST /api/analyze    → Text Analysis       │
 │  POST /api/deepfake   → Deepfake Detection  │
 │  POST /analyze-image  → OCR + Analysis      │
 │  GET  /api/threats    → Threat Feed         │
-└───────┬────────────────────┬───────────────┘
-        │                    │
-   ┌────▼────┐        ┌─────▼──────┐
-   │ EasyOCR │        │ Gemini AI  │
-   │ (Image  │        │ 2.5 Flash  │
-   │  → Text)│        │            │
-   └─────────┘        └────────────┘
+└──┬──────────┬──────────────┬───────────────┘
+   │          │              │
+┌──▼───┐ ┌───▼────┐  ┌──────▼───────┐
+│Tesse-│ │yt-dlp +│  │  Gemini AI   │
+│ract  │ │OpenCV  │  │  2.5 Flash   │
+│(OCR) │ │(Video  │  │  (Multimodal │
+│      │ │Frames) │  │    Vision)   │
+└──────┘ └────────┘  └──────────────┘
 ```
 
 ---
@@ -89,8 +100,9 @@ TruthLens AI combines **OCR + Generative AI + Deepfake Analysis** in one platfor
 TruthLens/
 ├── Backend/
 │   ├── main.py              # FastAPI server & all API endpoints
-│   ├── ai_analysis.py       # Gemini AI integration (text + deepfake analysis)
-│   ├── ocr.py               # EasyOCR text extraction
+│   ├── ai_analysis.py       # Gemini AI integration (text + deepfake + vision)
+│   ├── ocr.py               # Tesseract OCR text extraction
+│   ├── requirements.txt     # Python dependencies
 │   ├── .env                 # GEMINI_API_KEY (not committed)
 │   └── venv/                # Python virtual environment
 │
@@ -105,7 +117,11 @@ TruthLens/
 │   ├── tsconfig.json
 │   └── vite.config.ts
 │
+├── main.py              # Root entry point (Render deployment shim)
 ├── requirements.txt
+├── runtime.txt          # Python version for Render (3.11.9)
+├── render.yaml          # Render deployment config
+├── Procfile             # Render process file
 ├── .gitignore
 └── README.md
 ```
@@ -165,6 +181,33 @@ npm run dev
 
 * **Frontend:** [http://localhost:5173](http://localhost:5173)
 * **API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+## Deployment 🌐
+
+The app is deployed and live:
+
+| Service | Platform | URL |
+|---------|----------|-----|
+| Frontend | **Vercel** | https://truth-lens-nine-sand.vercel.app/ |
+| Backend | **Render** | https://truthlens-gxnp.onrender.com |
+
+### Environment Variables (Render)
+
+| Variable | Description |
+|----------|-------------|
+| `GEMINI_API_KEY` | Google Gemini API key |
+| `PYTHON_VERSION` | `3.11.9` |
+
+### Frontend Environment (Vercel)
+
+The frontend reads the backend URL from `VITE_API_BASE`. If not set, it defaults to the Render production URL.
+
+For local development, create `Frontend/.env.local`:
+```
+VITE_API_BASE=http://localhost:8000/api
+```
 
 ---
 
@@ -250,10 +293,10 @@ npm run dev
 |------|-------------|
 | 1 | User inputs text, uploads screenshot, or pastes video URL |
 | 2 | Backend receives request via FastAPI |
-| 3 | For images: EasyOCR extracts text |
+| 3 | For images: Tesseract OCR extracts text |
 | 4 | AI engine (Gemini 2.5 Flash) analyzes the content |
 | 5 | For text: Misinformation detection prompt evaluates credibility |
-| 6 | For video: Dedicated deepfake detection prompt evaluates manipulation likelihood |
+| 6 | For video: yt-dlp downloads video → OpenCV extracts 5 frames → Gemini Vision analyzes each frame |
 | 7 | Structured result returned to frontend with scores and explanations |
 
 ---
@@ -275,10 +318,10 @@ It does NOT blindly flag all videos as deepfakes — only content with genuine m
 
 * 🔌 Browser extension for instant fact-checking
 * 📸 Reverse image search integration
-* 🎥 Actual video frame analysis (computer vision)
-* 🌐 More languages and regional misinformation patterns
+* � More languages and regional misinformation patterns
 * 📊 User history and saved analyses
 * 🤖 WhatsApp/Telegram bot integration
+* 🔐 User authentication and rate limiting
 
 ---
 

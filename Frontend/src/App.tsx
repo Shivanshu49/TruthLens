@@ -538,7 +538,7 @@ function HowItWorks({ lang }: { lang: Lang }) {
 }
 
 // ──────────────── API CONFIG ────────────────
-const API_BASE = 'http://localhost:8000/api'
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://truthlens-gxnp.onrender.com/api'
 
 // ──────────────── LIVE SCANNER ────────────────
 interface AnalysisResult {
@@ -620,7 +620,7 @@ function Scanner({ lang }: { lang: Lang }) {
             const formData = new FormData()
             formData.append('file', imageFile)
 
-            const res = await fetch('http://localhost:8000/analyze-image', {
+            const res = await fetch(`${API_BASE.replace('/api', '')}/analyze-image`, {
                 method: 'POST',
                 body: formData,
             })
