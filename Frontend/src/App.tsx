@@ -1155,7 +1155,6 @@ function Scanner({ lang }: { lang: Lang }) {
                         {scanning ? t(lang, 'geminiProcessing') : t(lang, 'neuralActive')}<span className="type-cursor" />
                     </div>
                 </div>
-            </div>
         </section>
     )
 }

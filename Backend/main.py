@@ -169,20 +169,19 @@ def api_analyze(request: AnalyzeRequest):
 
 @app.post("/api/deepfake")
 def api_deepfake(request: DeepfakeRequest):
-    """Deepfake video analysis endpoint (AI-powered context analysis)."""
+    """Deepfake video analysis endpoint — extracts frames + AI vision analysis."""
     if not request.videoUrl.strip():
         return {"success": False, "message": "Video URL cannot be empty."}
 
     try:
+        logger.info(f"Deepfake analysis request: {request.videoUrl[:80]}")
         analysis = analyze_deepfake(request.videoUrl.strip(), request.description.strip())
         fake_score = max(0, min(100, analysis["deepfake_score"]))
-        h = abs(hash(request.videoUrl))
 
-        def clamp(val):
-            return max(10, min(100, val))
+        # Use real AI-generated scores from vision analysis
+        fa = analysis.get("facial_analysis", {})
+        ava = analysis.get("audio_visual_analysis", {})
 
-        # For low-risk (authentic) videos, facial/audio scores should be LOW (good)
-        # For high-risk (deepfake) videos, scores should be HIGH (bad)
         return {
             "success": True,
             "analysis": {
@@ -192,21 +191,22 @@ def api_deepfake(request: DeepfakeRequest):
                 "summary": analysis["explanation"],
                 "indicators": [
                     {"type": ind, "description": ind, "severity": "HIGH" if fake_score > 60 else "MEDIUM" if fake_score > 35 else "LOW"}
-                    for ind in analysis.get("indicators", [])[:3]
+                    for ind in analysis.get("indicators", [])[:5]
                 ],
                 "facialAnalysis": {
-                    "lipSyncScore": clamp(fake_score - 10 + (h % 15)),
-                    "blinkPatternScore": clamp(fake_score - 5 + (h % 12)),
-                    "skinTextureScore": clamp(fake_score + 3 + (h % 8)),
-                    "overallFacialScore": fake_score,
+                    "lipSyncScore": fa.get("lip_sync_score", fake_score),
+                    "blinkPatternScore": fa.get("blink_pattern_score", fake_score),
+                    "skinTextureScore": fa.get("skin_texture_score", fake_score),
+                    "overallFacialScore": fa.get("overall_facial_score", fake_score),
                 },
                 "audioAnalysis": {
-                    "syncScore": clamp(fake_score - 8 + (h % 14)),
-                    "naturalness": clamp(fake_score + 2 + (h % 10)),
-                    "cloneDetection": clamp(fake_score - 12 + (h % 16)),
+                    "syncScore": ava.get("consistency_score", fake_score),
+                    "naturalness": ava.get("artifact_score", fake_score),
+                    "cloneDetection": ava.get("lighting_score", fake_score),
                 },
-                "techniquesDetected": analysis.get("indicators", [])[:3],
-                "recommendation": "Exercise caution — analyze further before sharing." if fake_score > 50 else "This video appears to be authentic content. No significant deepfake indicators detected.",
+                "techniquesDetected": analysis.get("techniques_detected", [])[:5],
+                "framesAnalyzed": analysis.get("frames_analyzed", 0),
+                "recommendation": "Exercise caution — multiple deepfake indicators detected. Do not share." if fake_score > 60 else "Some suspicious elements detected — verify before sharing." if fake_score > 35 else "This video appears to be authentic content. No significant deepfake indicators detected.",
                 "educationalNote": "Deepfakes use AI to replace faces or synthesize speech. Look for unnatural blinking, mismatched lighting, and blurry edges around the face.",
             }
         }
