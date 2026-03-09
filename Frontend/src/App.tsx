@@ -179,7 +179,7 @@ function ScrollPixelShield() {
             generateShieldPixels()
         }
 
-        // Shield shape definition — TruthGuard shield outline + "TG" text
+        // Shield shape definition — TruthLens shield outline + "TL" text
         // The shield is drawn on a virtual grid, then sampled into pixel positions
         const pixels: { tx: number; ty: number; sx: number; sy: number; x: number; y: number; size: number; color: string; delay: number }[] = []
 
@@ -213,12 +213,12 @@ function ScrollPixelShield() {
             offCtx.strokeStyle = '#fff'
             offCtx.stroke()
 
-            // Draw "TG" text inside
+            // Draw "TL" text inside
             offCtx.font = `900 ${Math.floor(scale * 0.45)}px sans-serif`
             offCtx.textAlign = 'center'
             offCtx.textBaseline = 'middle'
             offCtx.fillStyle = '#fff'
-            offCtx.fillText('TG', 0, scale * 0.02)
+            offCtx.fillText('TL', 0, scale * 0.02)
 
             // Small checkmark below text
             offCtx.beginPath()
@@ -1330,10 +1330,10 @@ function StatsRow({ lang }: { lang: Lang }) {
 
 // ──────────────── TESTIMONIALS ────────────────
 const testimonials = [
-    { text: 'TruthGuard caught a deepfake video of our local politician that was causing riots in our district. It saved lives.', name: 'Ramesh Kumar', role: 'District Collector, UP', initials: 'RK' },
+    { text: 'TruthLens caught a deepfake video of our local politician that was causing riots in our district. It saved lives.', name: 'Ramesh Kumar', role: 'District Collector, UP', initials: 'RK' },
     { text: "As a journalist, this tool has become essential. I use it to verify sources before publishing and it's saved me from running false stories twice.", name: 'Priya Agarwal', role: 'Senior Reporter, The Hindu', initials: 'PA' },
-    { text: "My students now use TruthGuard in their media literacy classes. The education component is brilliant — it doesn't just detect, it teaches.", name: 'Prof. Sunita Mehta', role: 'Journalism Faculty, DU', initials: 'SM' },
-    { text: "We integrated TruthGuard's API into our platform and saw a 73% reduction in flagged misinformation reports within the first month.", name: 'Arjun Joshi', role: 'CTO, ShareChat', initials: 'AJ' },
+    { text: "My students now use TruthLens in their media literacy classes. The education component is brilliant — it doesn't just detect, it teaches.", name: 'Prof. Sunita Mehta', role: 'Journalism Faculty, DU', initials: 'SM' },
+    { text: "We integrated TruthLens's API into our platform and saw a 73% reduction in flagged misinformation reports within the first month.", name: 'Arjun Joshi', role: 'CTO, ShareChat', initials: 'AJ' },
 ]
 
 function Testimonials({ lang }: { lang: Lang }) {
