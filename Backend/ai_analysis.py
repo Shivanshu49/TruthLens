@@ -230,7 +230,7 @@ def _extract_video_frames(video_url: str, max_frames: int = 5) -> list[str]:
             'socket_timeout': 15,
             'max_filesize': 50 * 1024 * 1024,  # 50 MB max
         }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:  # type: ignore[arg-type]
             ydl.download([video_url])
 
         if not os.path.exists(video_path):
