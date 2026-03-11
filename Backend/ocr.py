@@ -1,11 +1,19 @@
 import pytesseract
 from PIL import Image
 import logging
+import shutil
+import platform
 
 logger = logging.getLogger("truthlens")
 
-# Point to the Tesseract binary on Windows
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Auto-detect Tesseract binary location
+if platform.system() == "Windows":
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+else:
+    # Linux (Render, etc.) — find tesseract in PATH
+    _tess = shutil.which("tesseract")
+    if _tess:
+        pytesseract.pytesseract.tesseract_cmd = _tess
 
 
 def extract_text_from_image(image_path: str) -> str:
