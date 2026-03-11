@@ -540,6 +540,12 @@ function HowItWorks({ lang }: { lang: Lang }) {
 // ──────────────── API CONFIG ────────────────
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://truthlens-gxnp.onrender.com/api'
 
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 120000): Promise<Response> {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer))
+}
+
 // ──────────────── LIVE SCANNER ────────────────
 interface AnalysisResult {
     fakeProbability: number
@@ -620,10 +626,11 @@ function Scanner({ lang }: { lang: Lang }) {
             const formData = new FormData()
             formData.append('file', imageFile)
 
-            const res = await fetch(`${API_BASE.replace('/api', '')}/analyze-image`, {
+            const res = await fetchWithTimeout(`${API_BASE.replace('/api', '')}/analyze-image`, {
                 method: 'POST',
                 body: formData,
             })
+            if (!res.ok) throw new Error(`Server error: ${res.status}`)
             const data = await res.json()
 
             if (data.extracted_text && !data.extracted_text.startsWith('OCR Error')) {
@@ -648,8 +655,11 @@ function Scanner({ lang }: { lang: Lang }) {
             } else {
                 setImageError(data.detail || data.extracted_text || 'Failed to extract text from image.')
             }
-        } catch {
-            setImageError(t(lang, 'imageBackendOffline'))
+        } catch (err) {
+            const msg = err instanceof DOMException && err.name === 'AbortError'
+                ? 'Request timed out. The server may be starting up — please try again in a moment.'
+                : t(lang, 'imageBackendOffline')
+            setImageError(msg)
         }
         setImageScanning(false)
     }
@@ -662,11 +672,12 @@ function Scanner({ lang }: { lang: Lang }) {
         setError('')
 
         try {
-            const res = await fetch(`${API_BASE}/analyze`, {
+            const res = await fetchWithTimeout(`${API_BASE}/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: input, contentType: 'text' }),
             })
+            if (!res.ok) throw new Error(`Server error: ${res.status}`)
             const data = await res.json()
 
             if (data.success && data.analysis) {
@@ -680,16 +691,12 @@ function Scanner({ lang }: { lang: Lang }) {
             } else {
                 setError(data.message || 'Analysis failed')
             }
-        } catch {
-            const fakeProb = Math.floor(60 + Math.random() * 35)
-            const biasLevels = ['LOW', 'MED', 'HIGH'] as const
-            const trustLevels = ['LOW', 'MED'] as const
-            setResults({
-                fake: fakeProb + '%',
-                bias: biasLevels[Math.floor(Math.random() * 3)],
-                trust: trustLevels[Math.floor(Math.random() * 2)],
-            })
-            setError('Backend offline — showing mock results. Start the backend for AI-powered analysis.')
+        } catch (err) {
+            if (err instanceof DOMException && err.name === 'AbortError') {
+                setError('Request timed out. The server may be waking up — please try again.')
+            } else {
+                setError('Could not reach server. Please try again in a moment.')
+            }
         }
         setScanning(false)
     }
@@ -704,11 +711,12 @@ function Scanner({ lang }: { lang: Lang }) {
         setVideoError('')
 
         try {
-            const res = await fetch(`${API_BASE}/deepfake`, {
+            const res = await fetchWithTimeout(`${API_BASE}/deepfake`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ videoUrl: videoUrl.trim(), description: videoDesc.trim() }),
-            })
+            }, 180000) // 3 minutes for video analysis
+            if (!res.ok) throw new Error(`Server error: ${res.status}`)
             const data = await res.json()
 
             if (data.success && data.analysis) {
@@ -717,25 +725,11 @@ function Scanner({ lang }: { lang: Lang }) {
                 setVideoError(data.message || 'Deepfake analysis failed')
             }
         } catch (err) {
-            console.error('Deepfake scan error:', err)
-            // Mock fallback
-            setDeepfakeResult({
-                deepfakeScore: Math.floor(40 + Math.random() * 55),
-                verdict: 'LIKELY_DEEPFAKE',
-                confidence: Math.floor(70 + Math.random() * 25),
-                summary: 'Analysis detected several manipulation indicators in this video. Facial inconsistencies and audio-visual sync issues suggest AI-generated content.',
-                indicators: [
-                    { type: 'Facial Inconsistency', description: 'Unnatural eye blinking pattern and lip movement detected', severity: 'HIGH' },
-                    { type: 'Audio Mismatch', description: 'Speech cadence does not match natural lip movements', severity: 'MEDIUM' },
-                    { type: 'Compression Artifacts', description: 'Unusual re-encoding patterns around face region', severity: 'MEDIUM' },
-                ],
-                facialAnalysis: { lipSyncScore: 35, blinkPatternScore: 42, skinTextureScore: 58, overallFacialScore: 40 },
-                audioAnalysis: { syncScore: 45, naturalness: 52, cloneDetection: 38 },
-                techniquesDetected: ['Face-swap GAN', 'Lip-sync deepfake', 'Voice cloning'],
-                recommendation: 'Do NOT share this video. Report it to the platform and fact-check with verified news sources.',
-                educationalNote: 'Deepfakes use AI to replace faces or synthesize speech. Look for unnatural blinking, mismatched lighting, and blurry edges around the face.'
-            })
-            setVideoError('Backend offline — showing mock results. Start the backend for AI-powered analysis.')
+            if (err instanceof DOMException && err.name === 'AbortError') {
+                setVideoError('Request timed out. Video analysis can take time — the server may be starting up. Please try again.')
+            } else {
+                setVideoError('Could not reach server. Please try again in a moment.')
+            }
         }
         setVideoScanning(false)
     }
@@ -787,6 +781,12 @@ function Scanner({ lang }: { lang: Lang }) {
                         <button className="scan-btn" onClick={runScan} disabled={scanning}>
                             {scanning ? t(lang, 'scanBtnScanning') : results ? t(lang, 'scanBtnDone') : t(lang, 'scanBtnAnalyze')}
                         </button>
+
+                        {scanning && (
+                            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace", textAlign: 'center' }}>
+                                Analyzing with Gemini AI… first request may take up to 60s while server warms up.
+                            </div>
+                        )}
 
                         {error && (
                             <div style={{ marginTop: 12, padding: '10px 16px', fontSize: 12, fontFamily: "'Space Mono', monospace", color: 'var(--warning)', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.15)' }}>
@@ -871,6 +871,12 @@ function Scanner({ lang }: { lang: Lang }) {
                         <button className="scan-btn deepfake-scan-btn" onClick={runDeepfakeScan} disabled={videoScanning}>
                             {videoScanning ? t(lang, 'deepfakeBtnScanning') : deepfakeResult ? t(lang, 'deepfakeBtnDone') : t(lang, 'deepfakeBtnAnalyze')}
                         </button>
+
+                        {videoScanning && (
+                            <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)', fontFamily: "'Space Mono', monospace", textAlign: 'center' }}>
+                                Downloading video &amp; extracting frames… this may take 1–2 minutes.
+                            </div>
+                        )}
 
                         {videoError && (
                             <div style={{ marginTop: 12, padding: '10px 16px', fontSize: 12, fontFamily: "'Space Mono', monospace", color: 'var(--warning)', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.15)' }}>
