@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Routes, Route, useNavigate, Link } from 'react-router-dom'
 import { Lang, t, languageNames } from './translations'
 
 /* ═══════════════════════════════════════════════════════════════ */
@@ -393,7 +392,6 @@ function useParallaxHero() {
 
 // ──────────────── NAV ────────────────
 function Nav({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme: () => void; lang: Lang; setLang: (l: Lang) => void }) {
-    const navigate = useNavigate()
     const [langOpen, setLangOpen] = useState(false)
     const langRef = useRef<HTMLDivElement>(null)
 
@@ -410,7 +408,7 @@ function Nav({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme
             <div className="nav-logo">TRUTH<span>LENS</span></div>
             <div className="nav-center">
                 <a href="#how">{t(lang, 'navHow')}</a>
-                <Link to="/scanner" style={{ textDecoration: 'none', color: 'inherit' }}>{t(lang, 'navScanner')}</Link>
+                <a href="#scanner">{t(lang, 'navScanner')}</a>
                 <a href="#features">{t(lang, 'navFeatures')}</a>
                 <a href="#education">{t(lang, 'navLearn')}</a>
             </div>
@@ -441,7 +439,7 @@ function Nav({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme
                     <span className="toggle-icon sun">☀️</span>
                     <span className="toggle-icon moon">🌙</span>
                 </div>
-                <button className="nav-cta" onClick={() => navigate('/scanner')}>{t(lang, 'navTryFree')}</button>
+                <button className="nav-cta" onClick={() => document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' })}>{t(lang, 'navTryFree')}</button>
             </div>
         </nav>
     )
@@ -449,7 +447,6 @@ function Nav({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme
 
 // ──────────────── HERO ────────────────
 function Hero({ lang }: { lang: Lang }) {
-    const navigate = useNavigate()
     return (
         <section className="hero" id="hero">
             <ParticleField />
@@ -467,7 +464,7 @@ function Hero({ lang }: { lang: Lang }) {
             </p>
 
             <div className="hero-actions">
-                <button className="btn-primary magnetic" onClick={() => navigate('/scanner')}>{t(lang, 'heroAnalyze')}</button>
+                <button className="btn-primary magnetic" onClick={() => document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' })}>{t(lang, 'heroAnalyze')}</button>
                 <button className="btn-secondary magnetic">{t(lang, 'heroDemo')}</button>
             </div>
 
@@ -578,9 +575,6 @@ interface DeepfakeResult {
 }
 
 function Scanner({ lang }: { lang: Lang }) {
-    // Scroll to top when Scanner page loads
-    useEffect(() => { window.scrollTo(0, 0) }, [])
-
     const [scanMode, setScanMode] = useState<'text' | 'video' | 'image'>('text')
 
     // Text scanner state
@@ -1378,7 +1372,6 @@ function Testimonials({ lang }: { lang: Lang }) {
 
 // ──────────────── CTA ────────────────
 function CTA({ lang }: { lang: Lang }) {
-    const navigate = useNavigate()
     const ctaParts = t(lang, 'ctaTitle').split('\n')
     return (
         <section className="section cta-section" id="cta">
@@ -1395,7 +1388,7 @@ function CTA({ lang }: { lang: Lang }) {
                 {t(lang, 'ctaSub')}
             </p>
             <div className="cta-actions reveal">
-                <button className="btn-primary magnetic" style={{ fontSize: 14, padding: '22px 60px' }} onClick={() => navigate('/scanner')}>{t(lang, 'ctaBtn')}</button>
+                <button className="btn-primary magnetic" style={{ fontSize: 14, padding: '22px 60px' }} onClick={() => document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' })}>{t(lang, 'ctaBtn')}</button>
             </div>
         </section>
     )
@@ -1464,22 +1457,16 @@ export default function App() {
             <LightGreenTint theme={theme} />
             <BotCursor />
             <Nav theme={theme} toggleTheme={toggleTheme} lang={lang} setLang={setLang} />
-            <Routes>
-                <Route path="/" element={
-                    <>
-                        <Hero lang={lang} />
-                        <Marquee lang={lang} />
-                        <HowItWorks lang={lang} />
-                        <Features lang={lang} />
-                        <Threats lang={lang} />
-                        <Education lang={lang} />
-                        <StatsRow lang={lang} />
-                        <Testimonials lang={lang} />
-                        <CTA lang={lang} />
-                    </>
-                } />
-                <Route path="/scanner" element={<Scanner lang={lang} />} />
-            </Routes>
+            <Hero lang={lang} />
+            <Marquee lang={lang} />
+            <HowItWorks lang={lang} />
+            <Scanner lang={lang} />
+            <Features lang={lang} />
+            <Threats lang={lang} />
+            <Education lang={lang} />
+            <StatsRow lang={lang} />
+            <Testimonials lang={lang} />
+            <CTA lang={lang} />
             <Footer lang={lang} />
         </>
     )
