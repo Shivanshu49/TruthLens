@@ -1168,7 +1168,7 @@ function Scanner({ lang }: { lang: Lang }) {
 // ──────────────── FEATURES ────────────────
 const featureEmojis = ['🔬', '💬', '🌐', '📡', '🏥', '📚']
 const featureTags = ['Computer Vision', 'NLP Engine', '22 Languages', 'Live Stream', 'WHO Verified', 'EdTech Layer']
-const featureComingSoon = [false, true, true, true, true, true]
+const featureComingSoon = [false, false, false, false, false, false]
 
 function Features({ lang }: { lang: Lang }) {
     const features = [
