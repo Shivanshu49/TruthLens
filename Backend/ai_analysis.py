@@ -68,11 +68,11 @@ def _cached_analyze(text_hash: str, text: str):
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "temperature": 0.1,
-            "max_output_tokens": 2048,
-        },
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.1,
+            max_output_tokens=2048,
+        ),
     )
     return response.text or ""
 
@@ -305,11 +305,11 @@ def analyze_deepfake(video_url, description=""):
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=[types.Content(role="user", parts=parts)],
-                config={
-                    "response_mime_type": "application/json",
-                    "temperature": 0.1,
-                    "max_output_tokens": 1500,
-                },
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                    max_output_tokens=1500,
+                ),
             )
             raw = response.text or ""
             logger.info("Vision-based deepfake analysis complete")
@@ -323,11 +323,11 @@ def analyze_deepfake(video_url, description=""):
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "temperature": 0.1,
-                    "max_output_tokens": 1500,
-                },
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                    max_output_tokens=1500,
+                ),
             )
             raw = response.text or ""
 
