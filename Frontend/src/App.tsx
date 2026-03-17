@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { Routes, Route, Link } from 'react-router-dom'
 import { Lang, t, languageNames } from './translations'
 
 /* ═══════════════════════════════════════════════════════════════ */
@@ -408,7 +409,7 @@ function Nav({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme
             <div className="nav-logo">TRUTH<span>LENS</span></div>
             <div className="nav-center">
                 <a href="#how">{t(lang, 'navHow')}</a>
-                <a href="#scanner">{t(lang, 'navScanner')}</a>
+                <Link to="/scanner">{t(lang, 'navScanner')}</Link>
                 <a href="#features">{t(lang, 'navFeatures')}</a>
                 <a href="#education">{t(lang, 'navLearn')}</a>
             </div>
@@ -439,7 +440,7 @@ function Nav({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme
                     <span className="toggle-icon sun">☀️</span>
                     <span className="toggle-icon moon">🌙</span>
                 </div>
-                <button className="nav-cta" onClick={() => document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' })}>{t(lang, 'navTryFree')}</button>
+                <button className="nav-cta" onClick={() => window.location.href='/scanner'}>{t(lang, 'navTryFree')}</button>
             </div>
         </nav>
     )
@@ -464,7 +465,7 @@ function Hero({ lang }: { lang: Lang }) {
             </p>
 
             <div className="hero-actions">
-                <button className="btn-primary magnetic" onClick={() => document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' })}>{t(lang, 'heroAnalyze')}</button>
+                <button className="btn-primary magnetic" onClick={() => window.location.href='/scanner'}>{t(lang, 'heroAnalyze')}</button>
                 <button className="btn-secondary magnetic">{t(lang, 'heroDemo')}</button>
             </div>
 
@@ -1388,7 +1389,7 @@ function CTA({ lang }: { lang: Lang }) {
                 {t(lang, 'ctaSub')}
             </p>
             <div className="cta-actions reveal">
-                <button className="btn-primary magnetic" style={{ fontSize: 14, padding: '22px 60px' }} onClick={() => document.getElementById('scanner')?.scrollIntoView({ behavior: 'smooth' })}>{t(lang, 'ctaBtn')}</button>
+                <button className="btn-primary magnetic" style={{ fontSize: 14, padding: '22px 60px' }} onClick={() => window.location.href='/scanner'}>{t(lang, 'ctaBtn')}</button>
             </div>
         </section>
     )
@@ -1433,6 +1434,47 @@ function LightGreenTint({ theme }: { theme: string }) {
     return <div id="green-scroll-tint" ref={overlayRef} />
 }
 
+// ──────────────── HOME PAGE ────────────────
+function HomePage({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme: () => void; lang: Lang; setLang: (l: Lang) => void }) {
+    return (
+        <>
+            <LiquidCanvas />
+            <ScrollPixelShield />
+            <LightGreenTint theme={theme} />
+            <BotCursor />
+            <Nav theme={theme} toggleTheme={toggleTheme} lang={lang} setLang={setLang} />
+            <Hero lang={lang} />
+            <Marquee lang={lang} />
+            <HowItWorks lang={lang} />
+            <Features lang={lang} />
+            <Threats lang={lang} />
+            <Education lang={lang} />
+            <StatsRow lang={lang} />
+            <Testimonials lang={lang} />
+            <CTA lang={lang} />
+            <Footer lang={lang} />
+        </>
+    )
+}
+
+// ──────────────── SCANNER PAGE ────────────────
+function ScannerPage({ theme, toggleTheme, lang, setLang }: { theme: string; toggleTheme: () => void; lang: Lang; setLang: (l: Lang) => void }) {
+    useEffect(() => {
+        window.scrollTo(0, 0)
+    }, [])
+
+    return (
+        <>
+            <LiquidCanvas />
+            <LightGreenTint theme={theme} />
+            <BotCursor />
+            <Nav theme={theme} toggleTheme={toggleTheme} lang={lang} setLang={setLang} />
+            <Scanner lang={lang} />
+            <Footer lang={lang} />
+        </>
+    )
+}
+
 // ──────────────── MAIN APP ────────────────
 export default function App() {
     const [theme, setTheme] = useState<'dark' | 'light'>('dark')
@@ -1451,23 +1493,9 @@ export default function App() {
     useParallaxHero()
 
     return (
-        <>
-            <LiquidCanvas />
-            <ScrollPixelShield />
-            <LightGreenTint theme={theme} />
-            <BotCursor />
-            <Nav theme={theme} toggleTheme={toggleTheme} lang={lang} setLang={setLang} />
-            <Hero lang={lang} />
-            <Marquee lang={lang} />
-            <HowItWorks lang={lang} />
-            <Scanner lang={lang} />
-            <Features lang={lang} />
-            <Threats lang={lang} />
-            <Education lang={lang} />
-            <StatsRow lang={lang} />
-            <Testimonials lang={lang} />
-            <CTA lang={lang} />
-            <Footer lang={lang} />
-        </>
+        <Routes>
+            <Route path="/" element={<HomePage theme={theme} toggleTheme={toggleTheme} lang={lang} setLang={setLang} />} />
+            <Route path="/scanner" element={<ScannerPage theme={theme} toggleTheme={toggleTheme} lang={lang} setLang={setLang} />} />
+        </Routes>
     )
 }
